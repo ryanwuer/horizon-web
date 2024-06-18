@@ -710,6 +710,7 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
           </Button>
           <MicroApp
             name="log"
+            region={cluster?.scope.region}
             disabled={!RBAC.Permissions.getContainerLog.allowed}
             clusterName={cluster?.name}
             env={env2MlogEnv.get(cluster?.scope.environment || 'dev')}
