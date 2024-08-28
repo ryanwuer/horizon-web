@@ -253,6 +253,7 @@ export default (props: any) => {
         release: releaseName,
       },
       templateConfig,
+      region: form.getFieldValue(ResourceKey.REGION),
     };
     if (creating) {
       return createClusterV2(
