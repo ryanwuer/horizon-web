@@ -405,12 +405,23 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
 
     const res: CLUSTER.PodInTable = item;
     Object.keys(res.annotations).forEach((k) => {
-      if (!k.startsWith('cloudnative.music.netease.com/git')) {
+      // This is a workaround for the issue that the annotation value(liveness/readiness probe script) is too long
+      // TODO: remove this workaround after the issue is fixed
+      if (k.endsWith('.sh')) {
         delete res.annotations[k];
       }
     });
     return res;
   }).sort((a: CLUSTER.PodInTable, b: CLUSTER.PodInTable) => {
+    // sort by annotation's key, keys with the upper case letter go to the front
+    const keysA = Object.keys(a.annotations);
+    const keysB = Object.keys(b.annotations);
+    for (let i = 0; i < Math.min(keysA.length, keysB.length); i += 1) {
+      if (keysA[i] !== keysB[i]) {
+        return keysB[i].localeCompare(keysA[i]);
+      }
+    }
+
     if (a.onlineStatus !== b.onlineStatus) {
       return a.onlineStatus === 'offline' ? -1 : 1;
     }
