@@ -93,6 +93,14 @@ export default (props: any) => {
     },
   ];
 
+  const titleRule: Rule[] = [
+    {
+      required: true,
+      pattern: /^(?!\d+$)(?=.{5,})(?!^\s+|\s+$).*$/,
+      message: formatMessage('titleRule'),
+    },
+  ];
+
   const imageTagRule: Rule[] = [
     {
       pattern: /^[a-zA-Z0-9_.-]+$/,
@@ -164,7 +172,7 @@ export default (props: any) => {
             }
           }}
         >
-          <Form.Item label={formatMessage('title')} name="title" rules={requiredRule}>
+          <Form.Item label={formatMessage('title')} name="title" rules={titleRule}>
             <Input />
           </Form.Item>
           <Form.Item label={formatMessage('description')} name="description">
