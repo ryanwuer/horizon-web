@@ -383,6 +383,7 @@ export default {
   'pages.pipeline.image': '镜像',
   'pages.pipeline.imageTag': '镜像Tag',
   'pages.pipeline.imageTagRule': '格式不正确！Tag只能包含字母、数字、下划线、中划线、点号',
+  'pages.pipeline.titleRule': '标题长度不得小于5个字符，且不能为全数字',
   'pages.pipeline.changes': '变更',
   'pages.pipeline.codeChange': '代码变更',
   'pages.pipeline.configChange': '配置变更',

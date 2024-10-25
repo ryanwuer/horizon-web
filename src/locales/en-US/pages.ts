@@ -383,6 +383,7 @@ export default {
   'pages.pipeline.image': 'Image',
   'pages.pipeline.imageTag': 'Image tag',
   'pages.pipeline.imageTagRule': 'Invalid! Right examples: v1.0.0 or latest',
+  'pages.pipeline.titleRule': 'Invalid! At least 5 characters and cannot be all numbers',
   'pages.pipeline.changes': 'Changes',
   'pages.pipeline.codeChange': 'Code change',
   'pages.pipeline.configChange': 'Config change',
