@@ -324,6 +324,8 @@ declare namespace API {
   type TemplateSchemaParam = {
     clusterID?: number,
     resourceType?: string,
+    clusterName?: string,
+    environment?: string,
   };
 
   type Tag = {

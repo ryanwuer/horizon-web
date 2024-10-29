@@ -18,6 +18,8 @@ interface Props {
   readOnly?: boolean;
   envTemplate?: boolean;
   clusterID?: number;
+  clusterName?: string;
+  environment?: string;
   resourceType?: string;
   template: API.Template;
   release?: string;
@@ -35,6 +37,8 @@ export default forwardRef((props: Props, ref) => {
     readOnly = false,
     envTemplate = false,
     clusterID,
+    clusterName,
+    environment,
     resourceType,
     template,
     release, setReleaseName = () => { },
@@ -66,6 +70,8 @@ export default forwardRef((props: Props, ref) => {
         return querySchema(templateName, release!, {
           clusterID,
           resourceType: ResourceType.INSTANCE,
+          clusterName,
+          environment,
         });
       }
       return querySchema(templateName, release!);
