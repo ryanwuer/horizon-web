@@ -480,6 +480,8 @@ export default (props: any) => {
                   setTemplateConfig={setTemplateConfig}
                   setValid={setDeployConfigValid}
                   clusterID={cluster?.id}
+                  clusterName={form.getFieldValue(ResourceKey.NAME)}
+                  environment={form.getFieldValue(ResourceKey.ENVIRONMENT)}
                   resourceType={ResourceType.INSTANCE}
                 />
               )
@@ -506,6 +508,8 @@ export default (props: any) => {
                   <DeployConfigForm
                     readOnly
                     clusterID={cluster?.id}
+                    clusterName={form.getFieldValue(ResourceKey.NAME)}
+                    environment={form.getFieldValue(ResourceKey.ENVIRONMENT)}
                     resourceType={ResourceType.INSTANCE}
                     template={templateBasic}
                     release={releaseName}
