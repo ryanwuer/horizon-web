@@ -272,6 +272,7 @@ export default {
   'pages.cluster.status.abnormal': 'Unhealthy',
   'pages.cluster.status.manualPaused': 'Manual paused',
   'pages.cluster.status.stepPaused': 'Step paused',
+  'pages.cluster.status.maintaining': 'Maintaining',
 
   'pages.cluster.basic.status': 'Status',
   'pages.cluster.basic.pipeline.unmerged': 'Unreleased PR',
@@ -649,7 +650,8 @@ export default {
     Freeing: The application instance is in the process of resource freeing and you cannot perform operations
     Deleting: The application instance is being deleted and you cannot perform operations
     Step paused: The application instance is in the step paused state
-    Manual paused: The application instance is in a manual paused state, and the latest deploy/rollback operation takes effect after unpause
+    Manual paused: The application instance is in a manual paused state, and the latest deploy/rollback operation takes effect after unpause,
+    Maintenance: The application instance is in maintenance mode and you cannot perform operations, ask the administrator for details
   `,
   'pages.message.cluster.builddeploy.rebuild.confirm': 'Are you sure to build and deploy the cluster again?',
   'pages.message.cluster.builddeploy.rebuild.content': 'The current application instance\'s deployment has not been completed. Repeated deployment will cause the current revision to be rolled back. Please evaluate the risk before operation!',

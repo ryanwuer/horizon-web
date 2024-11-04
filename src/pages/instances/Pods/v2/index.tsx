@@ -107,6 +107,7 @@ function PodsPage(props: PodsPageProps) {
         || status.status === ClusterStatus.MANUALPAUSED
         || status.status === ClusterStatus.SUSPENDED
         || status.status === ClusterStatus.NOTHEALTHY
+        || status.status === ClusterStatus.MAINTAINING
         || status.status === ClusterStatus.DEGRADED) {
         if (infoMenuRef.current) {
           infoMenuRef.current.refreshOutput();

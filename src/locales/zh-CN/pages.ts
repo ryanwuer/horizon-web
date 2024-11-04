@@ -272,6 +272,7 @@ export default {
   'pages.cluster.status.abnormal': '异常',
   'pages.cluster.status.manualPaused': '人工暂停',
   'pages.cluster.status.stepPaused': '批次暂停',
+  'pages.cluster.status.maintaining': '维护中（请勿做任何操作）',
 
   'pages.cluster.basic.status': '实例状态',
   'pages.cluster.basic.pipeline.unmerged': '未发布PR',
@@ -649,7 +650,8 @@ export default {
     释放中： 应用实例处于资源释放中，无法继续操作实例
     删除中： 应用实例处于删除中，无法继续操作实例
     批次暂停： 应用实例处于发布批次暂停中
-    人工暂停： 应用实例处于人工暂停中，发布/回滚操作会在取消暂停后生效
+    人工暂停： 应用实例处于人工暂停中，发布/回滚操作会在取消暂停后生效,
+    维护中： 应用实例处于维护中，请勿操作集群，并联系管理员获得帮助
   `,
   'pages.message.cluster.builddeploy.rebuild.confirm': '确定要重新构建发布吗？',
   'pages.message.cluster.builddeploy.rebuild.content': '当前应用实例发布未完成，重新构建发布会导致当前版本被回退，请评估风险后操作！',
