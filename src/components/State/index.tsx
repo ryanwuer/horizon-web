@@ -349,6 +349,8 @@ const StatusComponent = (props: { clusterStatus: string, manualPaused: boolean }
       return <Deleting text={intl.formatMessage({ id: 'pages.cluster.status.deleting' })} />;
     case ClusterStatus.NOTFOUND:
       return <NotFound text={intl.formatMessage({ id: 'pages.cluster.status.unreleased' })} />;
+    case ClusterStatus.MAINTAINING:
+      return <Suspended text={intl.formatMessage({ id: 'pages.cluster.status.maintaining' })} />;
     default:
       return <NotFound text={intl.formatMessage({ id: 'pages.cluster.status.notFound' })} />;
   }

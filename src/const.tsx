@@ -54,6 +54,7 @@ export enum ClusterStatus {
   FREEING = 'Freeing',
   FREED = 'Freed',
   DELETING = 'Deleting',
+  MAINTAINING = 'Maintaining',
 }
 
 const DeployTypeMap = new Map([

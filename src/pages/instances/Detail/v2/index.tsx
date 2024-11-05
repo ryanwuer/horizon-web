@@ -70,6 +70,8 @@ export default () => {
     () => querySchema(cluster.templateInfo.name, cluster.templateInfo.release, {
       clusterID,
       resourceType: ResourceType.INSTANCE,
+      clusterName: cluster.name,
+      environment: cluster.scope.environment,
     }),
     {
       ready: !!cluster && !!cluster.templateInfo.name && !!cluster.templateInfo.release,

@@ -67,6 +67,7 @@ function RebuilddeployModal(props: RebuilddeployModalProps) {
         || status.status === ClusterStatus.MANUALPAUSED
         || status.status === ClusterStatus.SUSPENDED
         || status.status === ClusterStatus.NOTHEALTHY
+        || status.status === ClusterStatus.MAINTAINING
         || status.status === ClusterStatus.DEGRADED) {
         setProgressing(true);
         getStep();
