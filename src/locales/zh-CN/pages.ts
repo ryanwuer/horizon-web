@@ -167,7 +167,7 @@ export default {
   'pages.applicationDetail.basic.config': '配置',
   'pages.applicationUpgrade.success': '应用升级成功',
   'pages.applicationUpgrade.confirm.title': '是否确定要升级该应用:{application}?',
-  'pages.applicationUpgrade.confirm.content': '升级至v2版本，体验JDK17、JDK21 等通用化模板等新特性',
+  'pages.applicationUpgrade.confirm.content': '升级至v2版本，体验JDK17、JDK21 等通用化模板新特性，对新建的集群生效。（注意：升级后无法回滚到v1，请确保有线上集群已升级到v2并验证无误后，再对应用进行升级）',
   'pages.applicationUpgrade.confirm.ok': '确定',
   'pages.applicationUpgrade.confirm.cancel': '取消',
   'pages.applicationDelete.success': '应用删除成功',
