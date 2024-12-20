@@ -10,6 +10,7 @@ import RBAC from '@/rbac';
 import DetailCard from '@/components/DetailCard';
 import ResourceAvatar from '@/components/Widget/ResourceAvatar';
 import { DangerText } from '@/components/Widget';
+import { pipelineV1 } from '@/services/version/version';
 
 export default (props: any) => {
   const {
@@ -17,8 +18,10 @@ export default (props: any) => {
     name: applicationName,
     refreshApplication,
     delApplication,
+    upgradeApplication,
     onEditClick,
     serviceDetail,
+    version,
   } = props;
   const intl = useIntl();
   const { successAlert } = useModel('alert');
@@ -37,6 +40,40 @@ export default (props: any) => {
       onClick={onEditClick}
     >
       {intl.formatMessage({ id: 'pages.applicationDetail.basic.edit' })}
+    </Button>
+  );
+
+  const upgradeButton = (
+    <Button
+      className={styles.button}
+      disabled={!RBAC.Permissions.upgradeApplication.allowed}
+      onClick={() => {
+        Modal.confirm({
+          title: intl.formatMessage(
+            { id: 'pages.applicationUpgrade.confirm.title' },
+            {
+              application: (
+                <span className={styles.bold}>
+                  {applicationName}
+                </span>
+              ),
+            },
+          ),
+          icon: <ExclamationCircleOutlined />,
+          content: (
+            <div className={styles.bold}>
+              {intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.content' })}
+            </div>
+          ),
+          okText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.ok' }),
+          cancelText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.cancel' }),
+          onOk: () => {
+            upgradeApplication();
+          },
+        });
+      }}
+    >
+      {intl.formatMessage({ id: 'pages.applicationDetail.basic.upgrade' })}
     </Button>
   );
 
@@ -100,6 +137,9 @@ export default (props: any) => {
           <div className={styles.flex} />
           {refreshButton}
           {editButton}
+          {
+            version === pipelineV1 && upgradeButton
+          }
           {deleteButton}
         </div>
       </div>

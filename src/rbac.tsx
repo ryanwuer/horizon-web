@@ -91,6 +91,11 @@ const Permissions = {
     action: Action.update,
     allowed: false,
   },
+  upgradeApplication: {
+    resource: Resource.application,
+    action: Action.update,
+    allowed: false,
+  },
   updateApplicationTags: {
     resource: `${Resource.application}/${Resource.tags}`,
     action: Action.create,
