@@ -44,37 +44,39 @@ export default (props: any) => {
   );
 
   const upgradeButton = (
-    <Button
-      className={styles.button}
-      disabled={!RBAC.Permissions.upgradeApplication.allowed}
-      onClick={() => {
-        Modal.confirm({
-          title: intl.formatMessage(
-            { id: 'pages.applicationUpgrade.confirm.title' },
-            {
-              application: (
-                <span className={styles.bold}>
-                  {applicationName}
-                </span>
-              ),
+    <Tooltip title={intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.content' })}>
+      <Button
+        className={styles.button}
+        disabled={!RBAC.Permissions.upgradeApplication.allowed}
+        onClick={() => {
+          Modal.confirm({
+            title: intl.formatMessage(
+              { id: 'pages.applicationUpgrade.confirm.title' },
+              {
+                application: (
+                  <span className={styles.bold}>
+                    {applicationName}
+                  </span>
+                ),
+              },
+            ),
+            icon: <ExclamationCircleOutlined />,
+            content: (
+              <div className={styles.bold}>
+                {intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.content' })}
+              </div>
+            ),
+            okText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.ok' }),
+            cancelText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.cancel' }),
+            onOk: () => {
+              upgradeApplication();
             },
-          ),
-          icon: <ExclamationCircleOutlined />,
-          content: (
-            <div className={styles.bold}>
-              {intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.content' })}
-            </div>
-          ),
-          okText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.ok' }),
-          cancelText: intl.formatMessage({ id: 'pages.applicationUpgrade.confirm.cancel' }),
-          onOk: () => {
-            upgradeApplication();
-          },
-        });
-      }}
-    >
-      {intl.formatMessage({ id: 'pages.applicationDetail.basic.upgrade' })}
-    </Button>
+          });
+        }}
+      >
+        {intl.formatMessage({ id: 'pages.applicationDetail.basic.upgrade' })}
+      </Button>
+    </Tooltip>
   );
 
   const deleteButton = (
