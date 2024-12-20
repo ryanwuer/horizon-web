@@ -13,6 +13,7 @@ import {
   getApplicationEnvTemplate,
   updateApplicationEnvTemplate,
   updateApplicationTags,
+  upgradeApplication,
 } from '@/services/applications/applications';
 import { querySchema } from '@/services/templates/templates';
 import PageWithBreadcrumb from '@/components/PageWithBreadcrumb';
@@ -27,6 +28,7 @@ import { API } from '@/services/typings';
 import TagCard from '@/components/tag/TagCard';
 import { MaxSpace } from '@/components/Widget';
 import rbac from '@/rbac';
+import { pipelineV1 } from '@/services/version/version';
 
 const { Option } = Select;
 
@@ -127,6 +129,11 @@ export default () => {
     window.location.href = applicationFullPath.substring(0, applicationFullPath.lastIndexOf('/'));
   }), { manual: true });
 
+  const { run: upgradeApp } = useRequest(() => upgradeApplication(id).then(() => {
+    successAlert(intl.formatMessage({ id: 'pages.applicationUpgrade.success' }));
+    location.reload();
+  }), { manual: true });
+
   const editApplicationRouteV1 = `/applications${applicationFullPath}/-/edit`;
   const templateInputHasError = () => {
     let hasError = false;
@@ -171,6 +178,8 @@ export default () => {
           delApplication={delApplication}
           onEditClick={onEditClick}
           serviceDetail={serviceDetail}
+          version={pipelineV1}
+          upgradeApplication={upgradeApp}
         />
         <Tabs>
           <TabPane

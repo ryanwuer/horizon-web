@@ -60,6 +60,14 @@ export async function getApplicationV2(id: number | string) {
   }>(`/apis/core/v2/applications/${id}`, { method: 'GET' });
 }
 
+export async function upgradeApplication(id: number) {
+  return request<{
+    data: API.Application;
+  }>(`/apis/core/v1/applications/${id}/upgrade`, {
+    method: 'POST',
+  });
+}
+
 export async function deleteApplication(id: number) {
   return request<{
     data: API.Application;
