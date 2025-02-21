@@ -481,6 +481,7 @@ export default (props: any) => {
                   setValid={setDeployConfigValid}
                   clusterID={cluster?.id}
                   clusterName={form.getFieldValue(ResourceKey.NAME)}
+                  region={form.getFieldValue(ResourceKey.REGION)}
                   environment={form.getFieldValue(ResourceKey.ENVIRONMENT)}
                   resourceType={ResourceType.INSTANCE}
                 />
@@ -509,6 +510,7 @@ export default (props: any) => {
                     readOnly
                     clusterID={cluster?.id}
                     clusterName={form.getFieldValue(ResourceKey.NAME)}
+                    region={form.getFieldValue(ResourceKey.REGION)}
                     environment={form.getFieldValue(ResourceKey.ENVIRONMENT)}
                     resourceType={ResourceType.INSTANCE}
                     template={templateBasic}

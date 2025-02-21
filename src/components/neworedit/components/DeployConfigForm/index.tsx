@@ -19,6 +19,7 @@ interface Props {
   envTemplate?: boolean;
   clusterID?: number;
   clusterName?: string;
+  region?: string;
   environment?: string;
   resourceType?: string;
   template: API.Template;
@@ -38,6 +39,7 @@ export default forwardRef((props: Props, ref) => {
     envTemplate = false,
     clusterID,
     clusterName,
+    region,
     environment,
     resourceType,
     template,
@@ -72,6 +74,7 @@ export default forwardRef((props: Props, ref) => {
           resourceType: ResourceType.INSTANCE,
           clusterName,
           environment,
+          region,
         });
       }
       return querySchema(templateName, release!);

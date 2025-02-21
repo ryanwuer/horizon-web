@@ -72,6 +72,7 @@ export default () => {
       resourceType: ResourceType.INSTANCE,
       clusterName: cluster.name,
       environment: cluster.scope.environment,
+      region: cluster.scope.region,
     }),
     {
       ready: !!cluster && !!cluster.templateInfo.name && !!cluster.templateInfo.release,

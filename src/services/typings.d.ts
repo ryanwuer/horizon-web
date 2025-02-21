@@ -326,6 +326,7 @@ declare namespace API {
     resourceType?: string,
     clusterName?: string,
     environment?: string,
+    region?: string,
   };
 
   type Tag = {
