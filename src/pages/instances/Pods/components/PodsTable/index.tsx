@@ -445,6 +445,37 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
     value: item,
   }));
 
+  // annotations field is a list of key-value pairs(type: Record<string, string>)
+  // final items in array have format key:value
+  // keep items only if there existing different values with same key
+  const annotationsList = useMemo(() => {
+    // First collect all keys and their possible values
+    const keyToValues = new Map<string, Set<string>>();
+    filteredData.forEach((item) => {
+      const { annotations } = item;
+      Object.keys(annotations).forEach((key) => {
+        if (!keyToValues.has(key)) {
+          keyToValues.set(key, new Set());
+        }
+        keyToValues.get(key)!.add(annotations[key]);
+      });
+    });
+    // Filter for keys that have multiple different values
+    const result: { text: string; value: string }[] = [];
+    keyToValues.forEach((values, key) => {
+      if (values.size > 1) {
+        // This key has multiple different values, include all variations
+        values.forEach((value) => {
+          result.push({
+            text: `${key}:${value}`,
+            value: `${key}:${value}`,
+          });
+        });
+      }
+    });
+    return result;
+  }, [filteredData]);
+
   const lifeCycleColumns = [
     {
       title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.type')}</span>,
@@ -681,6 +712,16 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
       title: formatMessage('annotations'),
       dataIndex: 'annotations',
       key: 'annotations',
+      filters: annotationsList,
+      onFilter: (value: string, record: CLUSTER.PodInTable) => {
+        const keys = Object.keys(record.annotations);
+        for (let i = 0; i < keys.length; i += 1) {
+          if (`${keys[i]}:${record.annotations[keys[i]]}` === value) {
+            return true;
+          }
+        }
+        return false;
+      },
       render: (text: any, record: CLUSTER.PodInTable) => (
         // return <collapseList defaultCount={2} data={record.annotations}/>
         Object.keys(record.annotations).length > 0
