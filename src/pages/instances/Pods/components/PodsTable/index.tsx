@@ -447,34 +447,19 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
 
   // annotations field is a list of key-value pairs(type: Record<string, string>)
   // final items in array have format key:value
-  // keep items only if there existing different values with same key
-  const annotationsList = useMemo(() => {
-    // First collect all keys and their possible values
-    const keyToValues = new Map<string, Set<string>>();
-    filteredData.forEach((item) => {
-      const { annotations } = item;
-      Object.keys(annotations).forEach((key) => {
-        if (!keyToValues.has(key)) {
-          keyToValues.set(key, new Set());
-        }
-        keyToValues.get(key)!.add(annotations[key]);
-      });
-    });
-    // Filter for keys that have multiple different values
-    const result: { text: string; value: string }[] = [];
-    keyToValues.forEach((values, key) => {
-      if (values.size > 1) {
-        // This key has multiple different values, include all variations
-        values.forEach((value) => {
-          result.push({
-            text: `${key}:${value}`,
-            value: `${key}:${value}`,
-          });
-        });
-      }
-    });
+  // sort by key:value string
+  const annotationsList = useMemo(() => Array.from(new Set(filteredData.map((item) => {
+    const keys = Object.keys(item.annotations);
+    const values = Object.values(item.annotations);
+    const result: string[] = [];
+    for (let i = 0; i < keys.length; i += 1) {
+      result.push(`${keys[i]}:${values[i]}`);
+    }
     return result;
-  }, [filteredData]);
+  }).flat())).sort().map((item) => ({
+    text: item,
+    value: item,
+  })), [filteredData]);
 
   const lifeCycleColumns = [
     {
