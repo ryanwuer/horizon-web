@@ -297,30 +297,32 @@ export default (props: any) => {
               )
             }
           </div>
-          <div className={styles.stepsAction}>
-            {current > 0 && (
-              <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-                {intl.formatMessage({ id: 'pages.common.back' })}
-              </Button>
-            )}
-            {current < steps.length - 1 && (
-              <Button type="primary" disabled={!currentStepIsValid(current)} onClick={() => next()}>
-                {intl.formatMessage({ id: 'pages.common.next' })}
-              </Button>
-            )}
-            {current === steps.length - 1 && (
-              <Button
-                type="primary"
-                onClick={() => {
-                  templateConfigRef.current.submit();
-                  buildConfigRef.current.submit();
-                }}
-                loading={loading}
-              >
-                {intl.formatMessage({ id: 'pages.common.submit' })}
-              </Button>
-            )}
-          </div>
+          <Affix offsetBottom={100}>
+            <div className={styles.stepsAction}>
+              {current > 0 && (
+                <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
+                  {intl.formatMessage({ id: 'pages.common.back' })}
+                </Button>
+              )}
+              {current < steps.length - 1 && (
+                <Button type="primary" disabled={!currentStepIsValid(current)} onClick={() => next()}>
+                  {intl.formatMessage({ id: 'pages.common.next' })}
+                </Button>
+              )}
+              {current === steps.length - 1 && (
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    templateConfigRef.current.submit();
+                    buildConfigRef.current.submit();
+                  }}
+                  loading={loading}
+                >
+                  {intl.formatMessage({ id: 'pages.common.submit' })}
+                </Button>
+              )}
+            </div>
+          </Affix>
         </Col>
       </Row>
     </PageWithBreadcrumb>
