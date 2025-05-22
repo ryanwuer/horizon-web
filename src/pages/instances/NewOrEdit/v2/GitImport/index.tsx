@@ -111,7 +111,7 @@ export default (props: any) => {
       case 3:
       case 4:
         valid = baseInfoValid && buildConfigValid && !!templateBasic.name
-        && deployConfigValid;
+          && deployConfigValid;
         break;
       default:
         valid = true;
@@ -523,42 +523,44 @@ export default (props: any) => {
               )
             }
           </StepContent>
-          <StepAction>
-            {current > 0 && (
-              <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-                {intl.formatMessage({ id: 'pages.common.back' })}
-              </Button>
-            )}
-            {current === steps.length - 1 && (
-              <Button
-                type="primary"
-                onClick={() => {
-                  buildFormRef.current.submit();
-                  templateFormRef.current.submit();
+          <Affix offsetBottom={100}>
+            <StepAction>
+              {current > 0 && (
+                <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
+                  {intl.formatMessage({ id: 'pages.common.back' })}
+                </Button>
+              )}
+              {current === steps.length - 1 && (
+                <Button
+                  type="primary"
+                  onClick={() => {
+                    buildFormRef.current.submit();
+                    templateFormRef.current.submit();
+                  }}
+                  loading={loading}
+                >
+                  {intl.formatMessage({ id: 'pages.common.submit' })}
+                </Button>
+              )}
+              {current < steps.length - 1 && (
+                <Button type="primary" disabled={!currentStepIsValid(current)} onClick={() => next()}>
+                  {intl.formatMessage({ id: 'pages.common.next' })}
+                </Button>
+              )}
+              {buildDeployModal}
+              {deployModal}
+              <RebuilddeployModal
+                open={enableRebuilddeployModal}
+                setOpen={setEnableRebuilddeployModal}
+                onCancel={() => {
+                  setEnableRebuilddeployModal(false);
+                  onButtonCancel();
                 }}
-                loading={loading}
-              >
-                {intl.formatMessage({ id: 'pages.common.submit' })}
-              </Button>
-            )}
-            {current < steps.length - 1 && (
-              <Button type="primary" disabled={!currentStepIsValid(current)} onClick={() => next()}>
-                {intl.formatMessage({ id: 'pages.common.next' })}
-              </Button>
-            )}
-            {buildDeployModal}
-            {deployModal}
-            <RebuilddeployModal
-              open={enableRebuilddeployModal}
-              setOpen={setEnableRebuilddeployModal}
-              onCancel={() => {
-                setEnableRebuilddeployModal(false);
-                onButtonCancel();
-              }}
-              clusterID={id}
-              clusterFullPath={cluster?.fullPath ?? ''}
-            />
-          </StepAction>
+                clusterID={id}
+                clusterFullPath={cluster?.fullPath ?? ''}
+              />
+            </StepAction>
+          </Affix>
         </Col>
       </Row>
     </PageWithBreadcrumb>
