@@ -365,9 +365,48 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
             Modal.confirm({
               title: intl.formatMessage({ id: 'pages.message.pods.delete.content' }, { number: selectedPods.length }),
               onOk() {
-                deletePods(cluster!.id, selectedPods.map((item) => item.podName)).then(({ data: d }) => {
-                  hookAfterBatchOps(formatMessage('delete'), d);
+                // group by zone annotation: cloudnative.music.netease.com/Zone: gy1/gy2/...
+                // if num of selected pods is over 30% of pods in data, give a confirm dialog
+                const selectedZonePodMap = new Map<string, number>();
+                selectedPods.forEach((item) => {
+                  const zone = item.annotations['cloudnative.music.netease.com/Zone'];
+                  if (zone) {
+                    selectedZonePodMap.set(zone, (selectedZonePodMap.get(zone) || 0) + 1);
+                  }
                 });
+                const zonePodMap = new Map<string, number>();
+                data.forEach((item) => {
+                  const zone = item.annotations['cloudnative.music.netease.com/Zone'];
+                  if (zone) {
+                    zonePodMap.set(zone, (zonePodMap.get(zone) || 0) + 1);
+                  }
+                });
+                // get the zone that has 30% of pods are being deleted
+                let zoneKey = '';
+                const hasZoneExceedingThreshold = Array.from(selectedZonePodMap.keys()).some((zone) => {
+                  const selectedZonePodNum = selectedZonePodMap.get(zone);
+                  const zonePodNum = zonePodMap.get(zone);
+                  if (selectedZonePodNum! > zonePodNum! * 0.3) {
+                    zoneKey = zone;
+                    return true;
+                  }
+                  return false;
+                });
+
+                if (hasZoneExceedingThreshold) {
+                  Modal.confirm({
+                    title: `${zoneKey} 机房实例下线/销毁比例超过 30%，可能导致机房间流量负载不均匀，请确认！`,
+                    onOk() {
+                      deletePods(cluster!.id, selectedPods.map((item) => item.podName)).then(({ data: d }) => {
+                        hookAfterBatchOps(formatMessage('delete'), d);
+                      });
+                    },
+                  });
+                } else {
+                  deletePods(cluster!.id, selectedPods.map((item) => item.podName)).then(({ data: d }) => {
+                    hookAfterBatchOps(formatMessage('delete'), d);
+                  });
+                }
               },
             });
           }}
@@ -419,6 +458,15 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
     for (let i = 0; i < Math.min(keysA.length, keysB.length); i += 1) {
       if (keysA[i] !== keysB[i]) {
         return keysB[i].localeCompare(keysA[i]);
+      }
+    }
+
+    // sort by annotation's value, same value with the same key is next to each other
+    const valuesA = Object.values(a.annotations);
+    const valuesB = Object.values(b.annotations);
+    for (let i = 0; i < Math.min(valuesA.length, valuesB.length); i += 1) {
+      if (valuesA[i] !== valuesB[i]) {
+        return valuesA[i].localeCompare(valuesB[i]);
       }
     }
 
