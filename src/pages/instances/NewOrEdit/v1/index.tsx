@@ -439,79 +439,81 @@ export default (props: any) => {
               )
             }
           </StepContent>
-          <StepAction>
-            {current > 0 && (
-              <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-                {intl.formatMessage({ id: 'pages.common.back' })}
-              </Button>
-            )}
-            {current === steps.length - 1 && (
-              <Button type="primary" onClick={() => { configRef.current.submit(); }} loading={loading}>
-                {intl.formatMessage({ id: 'pages.common.submit' })}
-              </Button>
-            )}
-            {current < steps.length - 1 && (
-              <Button type="primary" disabled={nextBtnDisabled()} onClick={() => next()}>
-                {intl.formatMessage({ id: 'pages.common.next' })}
-              </Button>
-            )}
-            <Modal
-              title={(
-                <ModalTitle>
-                  {intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.title' })}
-                </ModalTitle>
+          <Affix offsetBottom={100}>
+            <StepAction>
+              {current > 0 && (
+                <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
+                  {intl.formatMessage({ id: 'pages.common.back' })}
+                </Button>
               )}
-              open={showBuildDeployModal}
-              footer={[
-                <Button
-                  onClick={onBuildAndDeployButtonOK}
-                  type="primary"
-                >
-                  {intl.formatMessage({ id: 'pages.cluster.action.buildDeploy' })}
-                </Button>,
-              ]}
-              onCancel={onButtonCancel}
-            >
-              <ModalContent>
-                {creating
-                  ? intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.create.content' })
-                  : intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.edit.content' })}
-              </ModalContent>
-            </Modal>
-            <Modal
-              title={(
-                <ModalTitle>
-                  {intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.title' })}
-                </ModalTitle>
+              {current === steps.length - 1 && (
+                <Button type="primary" onClick={() => { configRef.current.submit(); }} loading={loading}>
+                  {intl.formatMessage({ id: 'pages.common.submit' })}
+                </Button>
               )}
-              open={showDeployModal}
-              footer={[
-                <Button
-                  onClick={onDeployButtonOK}
-                  type="primary"
-                >
-                  {intl.formatMessage({ id: 'pages.cluster.action.deploy' })}
-                </Button>,
-              ]}
-              onCancel={onButtonCancel}
-            >
-              <ModalContent>
-                {creating
-                  ? intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.create.content' })
-                  : intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.edit.content' })}
-              </ModalContent>
-            </Modal>
-            <RebuilddeployModal
-              open={enableRebuilddeployModal}
-              setOpen={setEnableRebuilddeployModal}
-              onCancel={() => {
-                setEnableRebuilddeployModal(false);
-                onButtonCancel();
-              }}
-              clusterID={id}
-              clusterFullPath={cluster?.fullPath ?? ''}
-            />
-          </StepAction>
+              {current < steps.length - 1 && (
+                <Button type="primary" disabled={nextBtnDisabled()} onClick={() => next()}>
+                  {intl.formatMessage({ id: 'pages.common.next' })}
+                </Button>
+              )}
+              <Modal
+                title={(
+                  <ModalTitle>
+                    {intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.title' })}
+                  </ModalTitle>
+                )}
+                open={showBuildDeployModal}
+                footer={[
+                  <Button
+                    onClick={onBuildAndDeployButtonOK}
+                    type="primary"
+                  >
+                    {intl.formatMessage({ id: 'pages.cluster.action.buildDeploy' })}
+                  </Button>,
+                ]}
+                onCancel={onButtonCancel}
+              >
+                <ModalContent>
+                  {creating
+                    ? intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.create.content' })
+                    : intl.formatMessage({ id: 'pages.clusterEdit.prompt.buildDeploy.edit.content' })}
+                </ModalContent>
+              </Modal>
+              <Modal
+                title={(
+                  <ModalTitle>
+                    {intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.title' })}
+                  </ModalTitle>
+                )}
+                open={showDeployModal}
+                footer={[
+                  <Button
+                    onClick={onDeployButtonOK}
+                    type="primary"
+                  >
+                    {intl.formatMessage({ id: 'pages.cluster.action.deploy' })}
+                  </Button>,
+                ]}
+                onCancel={onButtonCancel}
+              >
+                <ModalContent>
+                  {creating
+                    ? intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.create.content' })
+                    : intl.formatMessage({ id: 'pages.clusterEdit.prompt.deploy.edit.content' })}
+                </ModalContent>
+              </Modal>
+              <RebuilddeployModal
+                open={enableRebuilddeployModal}
+                setOpen={setEnableRebuilddeployModal}
+                onCancel={() => {
+                  setEnableRebuilddeployModal(false);
+                  onButtonCancel();
+                }}
+                clusterID={id}
+                clusterFullPath={cluster?.fullPath ?? ''}
+              />
+            </StepAction>
+          </Affix>
         </Col>
       </Row>
     </PageWithBreadcrumb>

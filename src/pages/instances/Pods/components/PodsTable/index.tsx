@@ -345,6 +345,8 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
                 clusterID={cluster!.id}
                 podNames={podNames}
                 disabled={podOperationDisabled}
+                data={data}
+                selectedPods={selectedPods}
               />
               <MicroApp
                 name="podoperation"
@@ -355,6 +357,8 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
                 clusterID={cluster!.id}
                 podNames={podNames}
                 disabled={podOperationDisabled}
+                data={data}
+                selectedPods={selectedPods}
               />
             </>
           )
