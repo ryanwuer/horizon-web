@@ -198,7 +198,7 @@ function PodsPage(props: PodsPageProps) {
                       key={key}
                       tabKey={key}
                     >
-                      <PodsTable key={key} data={podsInfo.podsMap[key]} cluster={cluster} />
+                      <PodsTable key={key} data={podsInfo.podsMap[key]} allData={Object.values(podsInfo.podsMap).flat()} cluster={cluster} />
                     </TabPane>
                   ))
                 }
