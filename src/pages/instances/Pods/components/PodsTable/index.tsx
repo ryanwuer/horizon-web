@@ -59,8 +59,10 @@ const LifeCycleItemRunning = 'Running';
 const noWrap = () => ({ style: { whiteSpace: 'nowrap' } });
 
 // eslint-disable-next-line react/require-default-props
-export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster | CLUSTER.ClusterV2, noMicroApp?: boolean }) => {
-  const { data, cluster, noMicroApp = false } = props;
+export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster | CLUSTER.ClusterV2, noMicroApp?: boolean }) => {
+  const {
+    data, allData, cluster, noMicroApp = false,
+  } = props;
   const intl = useIntl();
   const [pageNumber, setPageNumber] = useState(1);
   const [filter, setFilter] = useState('');
@@ -345,8 +347,7 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
                 clusterID={cluster!.id}
                 podNames={podNames}
                 disabled={podOperationDisabled}
-                data={data}
-                selectedPods={selectedPods}
+                allData={allData}
               />
               <MicroApp
                 name="podoperation"
@@ -357,8 +358,7 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
                 clusterID={cluster!.id}
                 podNames={podNames}
                 disabled={podOperationDisabled}
-                data={data}
-                selectedPods={selectedPods}
+                allData={allData}
               />
             </>
           )
@@ -379,7 +379,7 @@ export default (props: { data: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster |
                   }
                 });
                 const zonePodMap = new Map<string, number>();
-                data.forEach((item) => {
+                allData.forEach((item) => {
                   const zone = item.annotations['cloudnative.music.netease.com/Zone'];
                   if (zone) {
                     zonePodMap.set(zone, (zonePodMap.get(zone) || 0) + 1);
