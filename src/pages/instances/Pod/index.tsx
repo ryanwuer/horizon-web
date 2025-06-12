@@ -517,9 +517,17 @@ export default (props: any): React.ReactNode => {
                             key: 'value',
                           },
                         ]}
-                        dataSource={container?.env ? container?.env.filter(
-                          (env: any) => env.value,
-                        ) : []}
+                        dataSource={container?.env ? container?.env
+                          .filter((env: any) => env.value)
+                          .reduce((acc: any[], curr: any) => {
+                            const existingIndex = acc.findIndex((item) => item.name === curr.name);
+                            if (existingIndex >= 0) {
+                              acc[existingIndex] = curr;
+                            } else {
+                              acc.push(curr);
+                            }
+                            return acc;
+                          }, []) : []}
                         rowKey={(env) => env.name}
                       />
                       <span className={styles.containerDetailHeading}>

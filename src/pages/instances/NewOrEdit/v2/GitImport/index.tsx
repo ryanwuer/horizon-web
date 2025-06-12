@@ -162,7 +162,7 @@ export default (props: any) => {
         setTemplateConfig(data!.application);
       }
     },
-    ready: creating && !useHistoryConfig,
+    ready: creating && !useHistoryConfig && !copying,
     manual: true,
   });
 
