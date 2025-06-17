@@ -165,11 +165,24 @@ const rolloutGVR = {
   resource: 'rollouts',
 };
 
-export async function next(clusterID: number) {
-  await action(clusterID, {
-    action: 'promote',
-    ...rolloutGVR,
-  });
+const knativeServiceGVR = {
+  group: 'serving.knative.dev',
+  version: 'v1',
+  resource: 'services',
+};
+
+export async function next(clusterID: number, stepType: string) {
+  if (stepType === 'percent') {
+    await action(clusterID, {
+      action: 'promote',
+      ...knativeServiceGVR,
+    });
+  } else {
+    await action(clusterID, {
+      action: 'promote',
+      ...rolloutGVR,
+    });
+  }
 }
 
 export async function pause(clusterID: number) {
