@@ -81,6 +81,7 @@ export default {
   'pages.pods.step': 'Step {index}',
   'pages.pods.nextStep': 'Next step',
   'pages.pods.replica': 'replicas',
+  'pages.pods.percent': 'percents',
   'pages.pods.deployStep': 'Next step',
   'pages.pods.manualPause': 'Manual pause',
   'pages.pods.deployAll': 'Deploy all',

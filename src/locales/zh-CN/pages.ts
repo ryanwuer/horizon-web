@@ -81,6 +81,7 @@ export default {
   'pages.pods.step': '批次{index}',
   'pages.pods.nextStep': '下一批次',
   'pages.pods.replica': '副本',
+  'pages.pods.percent': '流量',
   'pages.pods.deployStep': '发布阶段',
   'pages.pods.manualPause': '人工暂停',
   'pages.pods.deployAll': '全部发布',

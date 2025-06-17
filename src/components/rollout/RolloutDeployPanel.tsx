@@ -116,8 +116,8 @@ const Tips = () => {
 };
 
 function DeployStep({
-  index, total, replicas, statusData,
-}: { index: number, total: number, replicas: number[], statusData: CLUSTER.ClusterStatusV2 }) {
+  index, total, replicas, statusData, stepType,
+}: { index: number, total: number, replicas: number[], statusData: CLUSTER.ClusterStatusV2, stepType: string }) {
   const intl = useIntl();
   const s = [];
   for (let i = 0; i < total; i += 1) {
@@ -147,9 +147,9 @@ function DeployStep({
               <span>
                 {item.title}
                 <br />
-                {replicas[idx]}
+                {stepType === 'percent' ? `${replicas[idx]}%` : `${replicas[idx]}`}
                 {' '}
-                {intl.formatMessage({ id: 'pages.pods.replica' })}
+                {stepType === 'percent' ? intl.formatMessage({ id: 'pages.pods.percent' }) : intl.formatMessage({ id: 'pages.pods.replica' })}
               </span>
             )}
             icon={icon}
@@ -185,35 +185,37 @@ function DeployButtons({
 }: DeployPageProps) {
   const intl = useIntl();
   const {
-    index, total, replicas, manualPaused, autoPromote: ifAutoPromote,
+    index, total, replicas, manualPaused, autoPromote: ifAutoPromote, stepType,
   } = step;
   return (
     <div title={intl.formatMessage({ id: 'pages.pods.deployStep' })}>
-      <DeployStep index={index} total={total} replicas={replicas} statusData={statusData} />
+      <DeployStep index={index} total={total} replicas={replicas} statusData={statusData} stepType={stepType} />
       <div style={{ textAlign: 'center' }}>
         {
-          manualPaused ? (
-            <OperationButton
-              type="primary"
-              disabled={!manualPaused || !RBAC.Permissions.resumeCluster.allowed}
-              style={{ margin: '0 8px' }}
-              onClick={onResume}
-              clusterStatus={statusData}
-            >
-              {intl.formatMessage({ id: 'pages.pods.unpause' })}
-            </OperationButton>
-          ) : (
-            <OperationButton
-              type="primary"
-              disabled={manualPaused
-                || statusData.status === ClusterStatus.SUSPENDED
-                || !RBAC.Permissions.pauseCluster.allowed}
-              style={{ margin: '0 8px' }}
-              onClick={onPause}
-              clusterStatus={statusData}
-            >
-              {intl.formatMessage({ id: 'pages.pods.manualPause' })}
-            </OperationButton>
+          stepType !== 'percent' && (
+            manualPaused ? (
+              <OperationButton
+                type="primary"
+                disabled={!manualPaused || !RBAC.Permissions.resumeCluster.allowed}
+                style={{ margin: '0 8px' }}
+                onClick={onResume}
+                clusterStatus={statusData}
+              >
+                {intl.formatMessage({ id: 'pages.pods.unpause' })}
+              </OperationButton>
+            ) : (
+              <OperationButton
+                type="primary"
+                disabled={manualPaused
+                  || statusData.status === ClusterStatus.SUSPENDED
+                  || !RBAC.Permissions.pauseCluster.allowed}
+                style={{ margin: '0 8px' }}
+                onClick={onPause}
+                clusterStatus={statusData}
+              >
+                {intl.formatMessage({ id: 'pages.pods.manualPause' })}
+              </OperationButton>
+            )
           )
         }
 
@@ -230,34 +232,39 @@ function DeployButtons({
         >
           {nextStepString}
         </OperationButton>
-        <OperationButton
-          type="primary"
-          disabled={
-            !RBAC.Permissions.deployClusterAll.allowed
-            || manualPaused
-          }
-          style={{ margin: '0 8px' }}
-          onClick={onPromoteFull}
-          clusterStatus={statusData}
-        >
-          {intl.formatMessage({ id: 'pages.pods.deployAll' })}
 
-        </OperationButton>
         {
-          ifAutoPromote ? (
+          stepType !== 'percent' && (
             <OperationButton
-              danger
+              type="primary"
               disabled={
-                !RBAC.Permissions.executeAction.allowed
+                !RBAC.Permissions.deployClusterAll.allowed
                 || manualPaused
               }
-              onClick={onAutoPromoteCancel}
+              style={{ margin: '0 8px' }}
+              onClick={onPromoteFull}
               clusterStatus={statusData}
             >
-              {intl.formatMessage({ id: 'pages.pods.cancelAutoDeploy' })}
+              {intl.formatMessage({ id: 'pages.pods.deployAll' })}
             </OperationButton>
           )
-            : (
+        }
+
+        {
+          stepType !== 'percent' && (
+            ifAutoPromote ? (
+              <OperationButton
+                danger
+                disabled={
+                  !RBAC.Permissions.executeAction.allowed
+                  || manualPaused
+                }
+                onClick={onAutoPromoteCancel}
+                clusterStatus={statusData}
+              >
+                {intl.formatMessage({ id: 'pages.pods.cancelAutoDeploy' })}
+              </OperationButton>
+            ) : (
               <Tooltip title={intl.formatMessage({ id: 'pages.message.cluster.autoDeploy.description' })}>
                 <OperationButton
                   type="primary"
@@ -273,19 +280,25 @@ function DeployButtons({
                 </OperationButton>
               </Tooltip>
             )
+          )
         }
-        <OperationButton
-          danger
-          disabled={
-            !RBAC.Permissions.rollbackCluster.allowed
-            || !RBAC.Permissions.freeCluster.allowed
-          }
-          style={{ margin: '0 8px' }}
-          onClick={onCancelDeploy}
-          clusterStatus={statusData}
-        >
-          {intl.formatMessage({ id: 'pages.pods.deployCancel' })}
-        </OperationButton>
+
+        {
+          stepType !== 'percent' && (
+            <OperationButton
+              danger
+              disabled={
+                !RBAC.Permissions.rollbackCluster.allowed
+                || !RBAC.Permissions.freeCluster.allowed
+              }
+              style={{ margin: '0 8px' }}
+              onClick={onCancelDeploy}
+              clusterStatus={statusData}
+            >
+              {intl.formatMessage({ id: 'pages.pods.deployCancel' })}
+            </OperationButton>
+          )
+        }
       </div>
     </div>
   );
@@ -321,7 +334,7 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
               step={step}
               onNext={
                 () => {
-                  next(id).then(() => {
+                  next(id, step.stepType).then(() => {
                     successAlert(
                       intl.formatMessage(
                         { id: 'pages.message.pods.step.deploy' },
