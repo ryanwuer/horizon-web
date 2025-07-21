@@ -60,6 +60,7 @@ export enum ClusterStatus {
 const DeployTypeMap = new Map([
   ['builddeploy', <Intl id="pages.cluster.action.buildDeploy" />],
   ['deploy', <Intl id="pages.cluster.action.deploy" />],
+  ['build', <Intl id="pages.cluster.action.build" />],
   ['rollback', <Intl id="pages.cluster.action.rollback" />],
   ['restart', <Intl id="pages.cluster.action.restart" />],
 ]);

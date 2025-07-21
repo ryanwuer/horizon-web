@@ -376,7 +376,7 @@ export default {
 
   'pages.cluster.action.buildDeploy': 'Build and deploy',
   'pages.cluster.action.gotoDetail': 'Go to detail',
-  'pages.cluster.action.deploy': 'Deploy',
+  'pages.cluster.action.build': 'Deploy',
   'pages.cluster.action.restart': 'Restart',
   'pages.cluster.action.rollback': 'Rollback',
   'pages.cluster.action.edit': 'Edit',
