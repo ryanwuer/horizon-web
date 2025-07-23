@@ -425,6 +425,7 @@ export default {
   'pages.pipeline.merge.cancel': '取消',
   'pages.pipeline.check.detail': '查看详情',
   'pages.pipeline.messages': '消息',
+  'pages.pipeline.enableBuildReuse': '使用预构建镜像（若有），最大可以节省 50% 的时间✨',
 
   'pages.application.members.title': '应用成员',
   'pages.groups.members.title': '分组成员',

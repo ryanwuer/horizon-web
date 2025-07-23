@@ -424,6 +424,7 @@ export default {
   'pages.pipeline.merge.cancel': 'Cancel',
   'pages.pipeline.check.detail': 'Detail',
   'pages.pipeline.messages': 'Messages',
+  'pages.pipeline.enableBuildReuse': 'Try to use pre built image to save max to 50% of BuildDeploy time✨',
 
   'pages.application.members.title': 'Application Members',
   'pages.groups.members.title': 'Group Members',
