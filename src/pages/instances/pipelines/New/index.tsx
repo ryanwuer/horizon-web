@@ -249,11 +249,15 @@ export default (props: any) => {
               </Form.Item>
             )
           }
-          <Form.Item name="enableBuildReuse" valuePropName="checked">
-            <Checkbox style={{ marginLeft: 8 }}>
-              {intl.formatMessage({ id: 'pages.pipeline.enableBuildReuse' })}
-            </Checkbox>
-          </Form.Item>
+          {
+            type === PublishType.BUILD_DEPLOY && (
+              <Form.Item name="enableBuildReuse" valuePropName="checked">
+                <Checkbox style={{ marginLeft: 8 }}>
+                  {intl.formatMessage({ id: 'pages.pipeline.enableBuildReuse' })}
+                </Checkbox>
+              </Form.Item>
+            )
+          }
         </HForm>
       </Card>
 
