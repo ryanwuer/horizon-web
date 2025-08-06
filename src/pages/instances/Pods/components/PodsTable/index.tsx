@@ -2,7 +2,9 @@ import {
   Button, Input, Menu, Modal, Space, Table, Tooltip,
 } from 'antd';
 import { useIntl } from '@@/plugin-locale/localeExports';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback, useEffect, useMemo, useState,
+} from 'react';
 import { useModel } from '@@/plugin-model/useModel';
 import './index.less';
 import { useRequest } from '@@/plugin-request/request';
@@ -513,6 +515,15 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     value: item,
   })), [filteredData]);
 
+  const [filteredTotal, setFilteredTotal] = useState(0);
+
+  useEffect(() => {
+    // Update total size after applying fitlers
+    if (data && data.length > 0) {
+      setFilteredTotal(filteredData.length);
+    }
+  }, [data, filteredData]);
+
   const lifeCycleColumns = [
     {
       title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.type')}</span>,
@@ -860,7 +871,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100, 500],
           current: pageNumber,
-          total: data.length,
+          total: filteredTotal,
           onChange: (page) => setPageNumber(page),
         }}
         title={renderTile}

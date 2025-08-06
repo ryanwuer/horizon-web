@@ -1,5 +1,5 @@
 import {
-  AutoComplete, Button, Card, Form, Input, Select,
+  AutoComplete, Button, Card, Checkbox, Form, Input, Select,
 } from 'antd';
 import { useIntl } from '@@/plugin-locale/localeExports';
 import TextArea from 'antd/es/input/TextArea';
@@ -123,12 +123,14 @@ export default (props: any) => {
     const info = {
       title: form.getFieldValue('title'),
       description: form.getFieldValue('description') || '',
+      enableBuildReuse: form.getFieldValue('enableBuildReuse') || false,
     };
     if (type === PublishType.BUILD_DEPLOY) {
       form.validateFields(['title', 'refType', 'refValue']).then(() => {
         pipelineRunCreate(id!, {
           ...info,
           action: 'builddeploy',
+          enableBuildReuse: info.enableBuildReuse,
           git: {
             [form.getFieldValue('refType')]: form.getFieldValue('refValue'),
           },
@@ -171,6 +173,7 @@ export default (props: any) => {
               refreshDiff(a[0].value);
             }
           }}
+          initialValues={{ enableBuildReuse: true }}
         >
           <Form.Item label={formatMessage('title')} name="title" rules={titleRule}>
             <Input />
@@ -187,7 +190,7 @@ export default (props: any) => {
               >
                 <Form.Item
                   name="refType"
-                  style={{ display: 'inline-block', width: '100px' }}
+                  style={{ display: 'inline-block', width: '100px', marginBottom: 0 }}
                 >
                   <Select
                     onSelect={(key: any) => {
@@ -205,7 +208,7 @@ export default (props: any) => {
                 </Form.Item>
                 <Form.Item
                   name="refValue"
-                  style={{ display: 'inline-block', width: 'calc(100% - 100px)' }}
+                  style={{ display: 'inline-block', width: 'calc(100% - 100px)', marginBottom: 0 }}
                 >
                   {
                     refType === GitRefType.Commit ? (
@@ -243,6 +246,15 @@ export default (props: any) => {
                 rules={imageTagRule}
               >
                 <Input />
+              </Form.Item>
+            )
+          }
+          {
+            type === PublishType.BUILD_DEPLOY && (
+              <Form.Item name="enableBuildReuse" valuePropName="checked">
+                <Checkbox style={{ marginLeft: 8 }}>
+                  {intl.formatMessage({ id: 'pages.pipeline.enableBuildReuse' })}
+                </Checkbox>
               </Form.Item>
             )
           }
