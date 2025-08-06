@@ -169,7 +169,7 @@ export default (props: any) => {
         tab: formatMessage('messages'),
       });
     }
-    if ((pipeline?.action === PublishType.BUILD_DEPLOY || pipeline?.action === PublishType.DEPLOY)
+    if ((pipeline?.action === PublishType.BUILD_DEPLOY || pipeline?.action === PublishType.DEPLOY || pipeline?.action === PublishType.BUILD)
     && pipeline?.status !== 'pending' && pipeline?.status !== 'ready') {
       tabs.push({
         key: 'BuildLog',

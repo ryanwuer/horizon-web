@@ -13,6 +13,7 @@ export enum ResourceType {
 }
 
 export enum PublishType {
+  BUILD = 'build',
   BUILD_DEPLOY = 'builddeploy',
   DEPLOY = 'deploy',
   RESTART = 'restart',
