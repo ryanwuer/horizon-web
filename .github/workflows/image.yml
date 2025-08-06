@@ -4,9 +4,9 @@ on:
   push:
     tags:
       - v*
+      - test*
     branches:
       - main
-      - test*
 jobs:
   release:
     runs-on: ubuntu-22.04
