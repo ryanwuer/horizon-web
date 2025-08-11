@@ -55,6 +55,7 @@ export default {
   'pages.common.all': '所有',
   'pages.common.default': '默认',
   'pages.common.result': '结果',
+  'pages.common.totalCount': '共 {totalCount} 条数据',
 
   'pages.common.more': '更多',
   'pages.common.application': '应用',

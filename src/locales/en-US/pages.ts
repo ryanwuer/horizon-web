@@ -55,6 +55,7 @@ export default {
   'pages.common.all': 'All',
   'pages.common.default': 'Default',
   'pages.common.result': 'Result',
+  'pages.common.totalCount': 'Total {totalCount}',
 
   'pages.common.more': 'More',
   'pages.common.application': 'Application',

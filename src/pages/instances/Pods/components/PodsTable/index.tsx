@@ -66,7 +66,6 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     data, allData, cluster, noMicroApp = false,
   } = props;
   const intl = useIntl();
-  const [pageNumber, setPageNumber] = useState(1);
   const [filter, setFilter] = useState('');
   const { initialState } = useModel('@@initialState');
   const { fullPath } = initialState!.resource;
@@ -861,9 +860,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
           position: ['bottomCenter'],
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100, 500],
-          current: pageNumber,
-          total: filteredData?.length ?? 0,
-          onChange: (page) => setPageNumber(page),
+          showTotal: ((total) => intl.formatMessage({ id: 'pages.common.totalCount' }, { totalCount: total })),
         }}
         title={renderTile}
         expandable={{
