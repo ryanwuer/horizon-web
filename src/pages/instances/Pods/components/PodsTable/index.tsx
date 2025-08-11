@@ -3,7 +3,7 @@ import {
 } from 'antd';
 import { useIntl } from '@@/plugin-locale/localeExports';
 import React, {
-  useCallback, useEffect, useMemo, useState,
+  useCallback, useMemo, useState,
 } from 'react';
 import { useModel } from '@@/plugin-model/useModel';
 import './index.less';
@@ -515,15 +515,6 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     value: item,
   })), [filteredData]);
 
-  const [filteredTotal, setFilteredTotal] = useState(0);
-
-  useEffect(() => {
-    // Update total size after applying fitlers
-    if (data && data.length > 0) {
-      setFilteredTotal(filteredData.length);
-    }
-  }, [data, filteredData]);
-
   const lifeCycleColumns = [
     {
       title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.type')}</span>,
@@ -871,7 +862,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100, 500],
           current: pageNumber,
-          total: filteredTotal,
+          total: filteredData?.length ?? 0,
           onChange: (page) => setPageNumber(page),
         }}
         title={renderTile}
