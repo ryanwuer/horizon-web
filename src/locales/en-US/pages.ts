@@ -377,6 +377,7 @@ export default {
   'pages.cluster.action.buildDeploy': 'Build and deploy',
   'pages.cluster.action.gotoDetail': 'Go to detail',
   'pages.cluster.action.deploy': 'Deploy',
+  'pages.cluster.action.build': 'Build',
   'pages.cluster.action.restart': 'Restart',
   'pages.cluster.action.rollback': 'Rollback',
   'pages.cluster.action.edit': 'Edit',
@@ -424,6 +425,7 @@ export default {
   'pages.pipeline.merge.cancel': 'Cancel',
   'pages.pipeline.check.detail': 'Detail',
   'pages.pipeline.messages': 'Messages',
+  'pages.pipeline.enableBuildReuse': 'Try to use pre built image to save max to 50% of BuildDeploy time✨',
 
   'pages.application.members.title': 'Application Members',
   'pages.groups.members.title': 'Group Members',

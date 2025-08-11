@@ -2,7 +2,9 @@ import {
   Button, Input, Menu, Modal, Space, Table, Tooltip,
 } from 'antd';
 import { useIntl } from '@@/plugin-locale/localeExports';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, {
+  useCallback, useMemo, useState,
+} from 'react';
 import { useModel } from '@@/plugin-model/useModel';
 import './index.less';
 import { useRequest } from '@@/plugin-request/request';
@@ -860,7 +862,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
           showSizeChanger: true,
           pageSizeOptions: [10, 20, 50, 100, 500],
           current: pageNumber,
-          total: data.length,
+          total: filteredData?.length ?? 0,
           onChange: (page) => setPageNumber(page),
         }}
         title={renderTile}
