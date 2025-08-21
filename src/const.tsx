@@ -15,6 +15,7 @@ export enum ResourceType {
 export enum PublishType {
   BUILD = 'build',
   BUILD_DEPLOY = 'builddeploy',
+  REUSED_BUILD_DEPLOY = 'reusedbuilddeploy',
   DEPLOY = 'deploy',
   RESTART = 'restart',
   ROLLBACK = 'rollback',
@@ -60,6 +61,7 @@ export enum ClusterStatus {
 
 const DeployTypeMap = new Map([
   ['builddeploy', <Intl id="pages.cluster.action.buildDeploy" />],
+  ['reusedbuilddeploy', <Intl id="pages.cluster.action.reusedBuildDeploy" />],
   ['deploy', <Intl id="pages.cluster.action.deploy" />],
   ['build', <Intl id="pages.cluster.action.build" />],
   ['rollback', <Intl id="pages.cluster.action.rollback" />],
