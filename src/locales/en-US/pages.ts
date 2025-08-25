@@ -376,6 +376,7 @@ export default {
   'pages.cluster.monitor.grafanaNotConfigured.subTitle': 'Please configure Grafana first',
 
   'pages.cluster.action.buildDeploy': 'Build and deploy',
+  'pages.cluster.action.reusedBuildDeploy': 'Reused build and deploy',
   'pages.cluster.action.gotoDetail': 'Go to detail',
   'pages.cluster.action.deploy': 'Deploy',
   'pages.cluster.action.build': 'Build',
