@@ -332,7 +332,7 @@ const refreshPodsInfo = (data?: CLUSTER.ResourceTree) => {
           readyCount,
           lifeCycle: parsePodLifeCycle(pod.podDetail!),
           restartCount,
-          containerName: containers[0].name,
+          containerName: metadata.labels['cloudnative.music.netease.com/cluster'] ?? containers[0].name,
           namespace,
           annotations: metadata.annotations,
           deletionTimestamp: metadata.deletionTimestamp,

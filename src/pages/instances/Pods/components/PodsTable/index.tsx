@@ -1012,6 +1012,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
         supportFullscreenToggle
         supportRefresh
         onRefreshButtonToggle={onRefreshButtonToggle}
+        defaultSelect={pod?.containerName}
       >
         <CodeEditor
           content={podLog}
