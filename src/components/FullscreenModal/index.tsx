@@ -24,17 +24,31 @@ interface Props {
   children?: any
   supportRefresh?: boolean
   onRefreshButtonToggle?: (checked: boolean, event: MouseEvent) => void
+  defaultSelect?: string
 }
 
 export default (props: Props) => {
   const intl = useIntl();
-  const [fullscreen, setFullscreen] = useState(props.fullscreen);
+  const {
+    fullscreen: fullscreenProp,
+    children,
+    visible,
+    title,
+    supportRefresh,
+    onRefreshButtonToggle,
+    listToSelect,
+    onSelectChange,
+    defaultSelect,
+    supportFullscreenToggle,
+    onClose,
+  } = props;
+  const [fullscreen, setFullscreen] = useState(fullscreenProp);
   const { successAlert, errorAlert } = useModel('alert');
   const onToggleClick = () => {
     setFullscreen(!fullscreen);
   };
   const onCopyClick = () => {
-    if (copy(props.children.props.content)) {
+    if (copy(children.props.content)) {
       successAlert(intl.formatMessage({ id: 'component.FullscreenModal.copySuccess' }));
     } else {
       errorAlert(intl.formatMessage({ id: 'component.FullscreenModal.copyFailed' }));
@@ -46,39 +60,39 @@ export default (props: Props) => {
       keyboard
       footer={[]}
       closable={false}
-      visible={props.visible}
+      visible={visible}
       destroyOnClose
       wrapClassName={fullscreen ? 'full-screen' : 'common-modal'}
       title={(
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {props.title}
+          {title}
           <div style={{ flex: 1 }} />
-          {props.supportRefresh && (
+          {supportRefresh && (
           <span
             style={{ fontSize: '13px', fontWeight: 'bold' }}
           >
             {intl.formatMessage({ id: 'component.FullscreenModal.autoRefresh' })}
           </span>
           )}
-          {props.supportRefresh && (
+          {supportRefresh && (
           <Switch
             className={styles.buttonClass}
             size="small"
             defaultChecked
-            onChange={props.onRefreshButtonToggle}
+            onChange={onRefreshButtonToggle}
           />
           )}
           {
-        (props.listToSelect && props.onSelectChange) && (
+        (listToSelect && onSelectChange) && (
         <div>
           <Select
-            defaultValue={props.listToSelect[0]}
+            defaultValue={defaultSelect ?? listToSelect[0]}
             onChange={(value) => {
-              props.onSelectChange!(value);
+              onSelectChange!(value);
             }}
           >
             {
-              props.listToSelect?.map((item: string) => <Option key={item} value={item}>{item}</Option>)
+              listToSelect?.map((item: string) => <Option key={item} value={item}>{item}</Option>)
             }
           </Select>
         </div>
@@ -87,7 +101,7 @@ export default (props: Props) => {
           <Button className={styles.buttonClass} onClick={onCopyClick}>
             <CopyOutlined className={styles.iconCommonModal} />
           </Button>
-          <Button hidden={!props.supportFullscreenToggle} className={styles.buttonClass}>
+          <Button hidden={!supportFullscreenToggle} className={styles.buttonClass}>
             {
           fullscreen
             ? (
@@ -105,12 +119,12 @@ export default (props: Props) => {
         }
           </Button>
           <Button className={styles.buttonClass}>
-            <CloseOutlined onClick={props.onClose} className={fullscreen ? styles.iconFullScreen : styles.iconCommonModal} />
+            <CloseOutlined onClick={onClose} className={fullscreen ? styles.iconFullScreen : styles.iconCommonModal} />
           </Button>
         </div>
 )}
     >
-      {props.children}
+      {children}
     </Modal>
   );
 };
