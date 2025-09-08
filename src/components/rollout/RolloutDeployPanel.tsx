@@ -13,6 +13,7 @@ import {
 } from '@/const';
 import {
   next, pause, resume, listPipelineRuns, freeCluster, autoPromote, cancelAutoPromote, promoteFull,
+  enforcePromote,
 } from '@/services/clusters/clusters';
 import RBAC from '@/rbac';
 import { PageWithInitialState } from '@/components/Enhancement';
@@ -163,6 +164,7 @@ function DeployStep({
 interface DeployPageProps {
   step: CLUSTER.Step,
   onNext: () => void,
+  onEnforcePromote: () => void,
   onPause: () => void,
   onPromoteFull: () => void,
   onResume: () => void,
@@ -180,7 +182,7 @@ const OperationButton = (props: ButtonProps & { clusterStatus: CLUSTER.ClusterSt
 };
 
 function DeployButtons({
-  step, onNext, onPause, onResume, onPromoteFull, onAutoPromote,
+  step, onNext, onEnforcePromote, onPause, onResume, onPromoteFull, onAutoPromote,
   onAutoPromoteCancel, onCancelDeploy, statusData, nextStepString,
 }: DeployPageProps) {
   const intl = useIntl();
@@ -231,6 +233,19 @@ function DeployButtons({
           clusterStatus={statusData}
         >
           {nextStepString}
+        </OperationButton>
+
+        <OperationButton
+          type="primary"
+          disabled={
+            !RBAC.Permissions.deployClusterNext.allowed
+            || manualPaused
+          }
+          style={{ margin: '0 8px' }}
+          onClick={onEnforcePromote}
+          clusterStatus={statusData}
+        >
+          强制完结本批次
         </OperationButton>
 
         {
@@ -341,6 +356,14 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
                         { index: step.index + 1 },
                       ),
                     );
+                    refresh();
+                  });
+                }
+              }
+              onEnforcePromote={
+                () => {
+                  enforcePromote(id).then(() => {
+                    successAlert(intl.formatMessage({ id: 'pages.message.cluster.enforcePromote.success' }));
                     refresh();
                   });
                 }

@@ -32,6 +32,7 @@ export default {
   'pages.common.false': 'False',
   'pages.common.search': 'Search',
   'pages.common.next': 'Next',
+  'pages.common.enforcePromote': 'Enforce promote',
   'pages.common.back': 'Back',
   'pages.common.submit': 'Submit',
   'pages.common.confirm': 'OK',

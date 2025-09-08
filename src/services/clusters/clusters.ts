@@ -185,6 +185,13 @@ export async function next(clusterID: number, stepType: string) {
   }
 }
 
+export async function enforcePromote(clusterID: number) {
+  await action(clusterID, {
+    action: 'enforce-promote',
+    ...rolloutGVR,
+  });
+}
+
 export async function pause(clusterID: number) {
   await action(clusterID, {
     action: 'pause',
