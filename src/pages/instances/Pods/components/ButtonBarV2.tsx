@@ -37,7 +37,7 @@ function ButtonBarV2(props: ButtonBarProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   // DangerConfirm 确认后调用的函数
-  let handleConfirm = () => { };
+  const [actionType, setActionType] = useState('free' as 'free' | 'delete');
   const [dangerContent, setDangerContent] = useState('');
   const [dangerTitle, setDangerTitle] = useState('');
 
@@ -106,7 +106,7 @@ function ButtonBarV2(props: ButtonBarProps) {
       case 'freeCluster':
         setDangerContent(intl.formatMessage({ id: 'pages.message.cluster.free.content' }));
         setDangerTitle(intl.formatMessage({ id: 'pages.message.cluster.free.title' }));
-        handleConfirm = handleConfirmFree;
+        setActionType('free');
         setConfirmOpen(true);
         break;
       default:
@@ -116,7 +116,7 @@ function ButtonBarV2(props: ButtonBarProps) {
   const onDeleteCluster = () => {
     setDangerContent(intl.formatMessage({ id: 'pages.message.cluster.delete.content' }));
     setDangerTitle(intl.formatMessage({ id: 'pages.message.cluster.delete.title' }));
-    handleConfirm = handleConfirmDelete;
+    setActionType('delete');
     setConfirmOpen(true);
   };
 
@@ -236,7 +236,10 @@ function ButtonBarV2(props: ButtonBarProps) {
       <DangerConfirm
         open={confirmOpen}
         onCancel={handleCancel}
-        onConfirm={handleConfirm}
+        onConfirm={() => {
+          if (actionType === 'delete') { handleConfirmDelete(); }
+          if (actionType === 'free') { handleConfirmFree(); }
+        }}
         // 动态传入待删除目标作为验证字符串（确保用户明确操作对象）
         requiredString={cluster.name}
         content={dangerContent}
