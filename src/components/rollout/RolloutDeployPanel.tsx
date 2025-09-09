@@ -12,7 +12,7 @@ import {
   ClusterStatus,
 } from '@/const';
 import {
-  next, pause, resume, listPipelineRuns, freeCluster, autoPromote, cancelAutoPromote, promoteFull,
+  next, pause, resume, listPipelineRuns, autoPromote, cancelAutoPromote, promoteFull,
 } from '@/services/clusters/clusters';
 import RBAC from '@/rbac';
 import { PageWithInitialState } from '@/components/Enhancement';
@@ -408,11 +408,7 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
                             </div>
                           ),
                           onOk: () => {
-                            freeCluster(id).then(() => {
-                              successAlert(intl.formatMessage(
-                                { id: 'pages.message.cluster.deployCancel.first.success' },
-                              ));
-                            });
+                            // We can't use freeCluster directly. User must do it manually.
                           },
                           width: '750px',
                         },

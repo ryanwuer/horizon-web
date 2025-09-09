@@ -15,10 +15,11 @@ import FavoriteStar from './FavoriteStar';
 import QueryBoldSpan from './QueryBoldSpan';
 import IdentAvatar from './RandomAvatar';
 import CircleTag from './CircleTag';
+import DangerConfirm from './DangerConfirm';
 
 export {
   BoldText, StyledDropdownSwitch, CenterSpin, DangerText, WarningText,
   DropdownSwitch, ExactTime, MaxSpace, PopupTime, QueryBoldSpan,
   MainText, ResourceAvatar, LocationBox, MicroApp, Progressing,
-  FavoriteStar, IdentAvatar as RandomAvatar, CircleTag,
+  FavoriteStar, IdentAvatar as RandomAvatar, CircleTag, DangerConfirm,
 };

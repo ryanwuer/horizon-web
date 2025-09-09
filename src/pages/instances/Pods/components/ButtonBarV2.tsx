@@ -14,6 +14,7 @@ import { ClusterStatus, PublishType } from '@/const';
 import { createPipelineRun, deleteCluster, freeCluster } from '@/services/clusters/clusters';
 import { CatalogType } from '@/services/core';
 import { DangerText, MicroApp, WarningText } from '@/components/Widget';
+import { DangerConfirm } from '@/components/Widget';
 
 interface ButtonBarProps {
   clusterStatus: CLUSTER.ClusterStatusV2,
@@ -33,6 +34,33 @@ function ButtonBarV2(props: ButtonBarProps) {
   const intl = useIntl();
   const { successAlert, errorAlert } = useModel('alert');
   const [enableRebuilddeployModal, setEnableRebuilddeployModal] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // DangerConfirm 确认后调用的函数
+  let handleConfirm = () => { };
+  const [dangerContent, setDangerContent] = useState('');
+  const [dangerTitle, setDangerTitle] = useState('');
+
+  // DangerConfirm 取消删除：关闭弹窗
+  const handleCancel = () => {
+    setConfirmOpen(false);
+  };
+
+  const handleConfirmFree = () => {
+    freeCluster(id).then(() => {
+      successAlert(intl.formatMessage({ id: 'pages.message.cluster.free.process' }));
+    });
+
+    setConfirmOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    deleteCluster(id).then(() => {
+      successAlert(intl.formatMessage({ id: 'pages.message.cluster.delete.process' }));
+    });
+
+    setConfirmOpen(false);
+  };
 
   const { run: runRestart } = useRequest(() => createPipelineRun(id!, { action: 'restart' }), {
     onSuccess: (pr: PIPELINES.Pipeline) => {
@@ -76,31 +104,20 @@ function ButtonBarV2(props: ButtonBarProps) {
         }
         break;
       case 'freeCluster':
-        Modal.confirm({
-          title: intl.formatMessage({ id: 'pages.message.cluster.free.confirm' }),
-          content: intl.formatMessage({ id: 'pages.message.cluster.free.content' }),
-          onOk() {
-            freeCluster(id).then(() => {
-              successAlert(intl.formatMessage({ id: 'pages.message.cluster.free.process' }));
-            });
-          },
-        });
+        setDangerContent(intl.formatMessage({ id: 'pages.message.cluster.free.content' }));
+        setDangerTitle(intl.formatMessage({ id: 'pages.message.cluster.free.title' }));
+        handleConfirm = handleConfirmFree;
+        setConfirmOpen(true);
         break;
       default:
     }
   };
 
   const onDeleteCluster = () => {
-    Modal.confirm({
-      title: intl.formatMessage({ id: 'pages.message.cluster.delete.confirm' }),
-      content: intl.formatMessage({ id: 'pages.message.cluster.delete.content' }),
-      onOk() {
-        deleteCluster(cluster!.id).then(() => {
-          successAlert(intl.formatMessage({ id: 'pages.message.cluster.delete.process' }));
-          window.location.href = `${cluster!.fullPath.substring(0, cluster!.fullPath.lastIndexOf('/'))}`;
-        });
-      },
-    });
+    setDangerContent(intl.formatMessage({ id: 'pages.message.cluster.delete.content' }));
+    setDangerTitle(intl.formatMessage({ id: 'pages.message.cluster.delete.title' }));
+    handleConfirm = handleConfirmDelete;
+    setConfirmOpen(true);
   };
 
   const onClickOperationWithResumePrompt = ({ key }: { key: string }) => {
@@ -216,6 +233,16 @@ function ButtonBarV2(props: ButtonBarProps) {
           <DownOutlined />
         </Button>
       </Dropdown>
+      <DangerConfirm
+        open={confirmOpen}
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+        // 动态传入待删除目标作为验证字符串（确保用户明确操作对象）
+        requiredString={cluster.name}
+        content={dangerContent}
+        title={dangerTitle}
+        confirmBtnText={intl.formatMessage({ id: 'pages.cluster.action.ok' })}
+      />
       <RebuilddeployModal
         open={enableRebuilddeployModal}
         setOpen={setEnableRebuilddeployModal}
