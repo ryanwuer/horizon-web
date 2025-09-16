@@ -172,7 +172,8 @@ interface DeployPageProps {
   onAutoPromoteCancel: () => void,
   onCancelDeploy: () => void,
   statusData: CLUSTER.ClusterStatusV2,
-  nextStepString: string
+  nextStepString: string,
+  cluster: CLUSTER.ClusterV2,
 }
 
 const OperationButton = (props: ButtonProps & { clusterStatus: CLUSTER.ClusterStatusV2 }) => {
@@ -182,13 +183,16 @@ const OperationButton = (props: ButtonProps & { clusterStatus: CLUSTER.ClusterSt
 };
 
 function DeployButtons({
-  step, onNext, onEnforcePromote, onPause, onResume, onPromoteFull, onAutoPromote,
+  step, cluster, onNext, onEnforcePromote, onPause, onResume, onPromoteFull, onAutoPromote,
   onAutoPromoteCancel, onCancelDeploy, statusData, nextStepString,
 }: DeployPageProps) {
   const intl = useIntl();
   const {
     index, total, replicas, manualPaused, autoPromote: ifAutoPromote, stepType,
   } = step;
+  const suspension = cluster.templateConfig.app?.spec?.karmada?.suspension;
+  // suspension struct: {xxx: false, xx: true}
+  const zoneSuspended = suspension ? Object.values(suspension).some((value) => value) : false;
   return (
     <div title={intl.formatMessage({ id: 'pages.pods.deployStep' })}>
       <DeployStep index={index} total={total} replicas={replicas} statusData={statusData} stepType={stepType} />
@@ -221,32 +225,36 @@ function DeployButtons({
           )
         }
 
-        <OperationButton
-          type="primary"
-          disabled={
-            !RBAC.Permissions.deployClusterNext.allowed
-            || statusData.status !== ClusterStatus.SUSPENDED
-            || manualPaused
-          }
-          style={{ margin: '0 8px' }}
-          onClick={onNext}
-          clusterStatus={statusData}
-        >
-          {nextStepString}
-        </OperationButton>
-
-        <OperationButton
-          type="primary"
-          disabled={
-            !RBAC.Permissions.deployClusterNext.allowed
-            || manualPaused
-          }
-          style={{ margin: '0 8px' }}
-          onClick={onEnforcePromote}
-          clusterStatus={statusData}
-        >
-          强制完结本批次
-        </OperationButton>
+        {
+          zoneSuspended ? (
+            <OperationButton
+              type="primary"
+              disabled={
+                !RBAC.Permissions.deployClusterNext.allowed
+                || manualPaused
+              }
+              style={{ margin: '0 8px' }}
+              onClick={onEnforcePromote}
+              clusterStatus={statusData}
+            >
+              {nextStepString}
+            </OperationButton>
+          ) : (
+            <OperationButton
+              type="primary"
+              disabled={
+                !RBAC.Permissions.deployClusterNext.allowed
+                || statusData.status !== ClusterStatus.SUSPENDED
+                || manualPaused
+              }
+              style={{ margin: '0 8px' }}
+              onClick={onNext}
+              clusterStatus={statusData}
+            >
+              {nextStepString}
+            </OperationButton>
+          )
+        }
 
         {
           stepType !== 'percent' && (
@@ -323,12 +331,13 @@ interface RolloutDeployPanelProps {
   clusterStatus: CLUSTER.ClusterStatusV2,
   refresh: () => void,
   initialState: API.InitialState,
-  step: CLUSTER.Step
+  step: CLUSTER.Step,
+  cluster: CLUSTER.ClusterV2,
 }
 
 function RolloutDeployPanel(props: RolloutDeployPanelProps) {
   const {
-    clusterStatus, initialState, refresh, step,
+    clusterStatus, initialState, refresh, step, cluster,
   } = props;
   const { id, fullPath } = initialState.resource;
 
@@ -347,6 +356,7 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
             <DeployButtons
               statusData={clusterStatus}
               step={step}
+              cluster={cluster}
               onNext={
                 () => {
                   next(id, step.stepType).then(() => {
@@ -363,7 +373,9 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
               onEnforcePromote={
                 () => {
                   enforcePromote(id).then(() => {
-                    successAlert(intl.formatMessage({ id: 'pages.message.cluster.enforcePromote.success' }));
+                    successAlert(
+                      intl.formatMessage({ id: 'pages.message.cluster.enforcePromote.success' }),
+                    );
                     refresh();
                   });
                 }

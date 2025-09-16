@@ -10,9 +10,9 @@ export default {
     '/apis/': {
       // target: 'http://localhost:8080',
       // target: 'http://horizon.yf-dev2.netease.com',
-      target: 'https://horizon.netease.com',
+      // target: 'https://horizon.netease.com',
       // target: 'http://horizon.yf-dev-gy1.netease.com',
-      // target: 'http://horizon.yf-online-gy3.service.gy.ntes',
+      target: 'http://horizon.yf-online-gy3.service.gy.ntes',
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },

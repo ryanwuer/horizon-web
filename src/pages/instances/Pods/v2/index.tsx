@@ -185,6 +185,7 @@ function PodsPage(props: PodsPageProps) {
                 step={step}
                 refresh={() => { refreshStep(); refreshCluster(); refreshBuildStatus(); }}
                 clusterStatus={clusterStatus}
+                cluster={cluster}
               />
             )
           }

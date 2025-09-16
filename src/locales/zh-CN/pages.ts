@@ -32,7 +32,6 @@ export default {
   'pages.common.false': '否',
   'pages.common.search': '搜索',
   'pages.common.next': '下一步',
-  'pages.common.enforcePromote': '强制完结本批次',
   'pages.common.back': '上一步',
   'pages.common.submit': '提交',
   'pages.common.confirm': '确认',
