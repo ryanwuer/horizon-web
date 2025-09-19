@@ -65,6 +65,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
   const {
     data, allData, cluster, noMicroApp = false,
   } = props;
+  const appName = (cluster as CLUSTER.ClusterV2)?.applicationName || (cluster as CLUSTER.Cluster)?.application?.name;
   const intl = useIntl();
   const [filter, setFilter] = useState('');
   const { initialState } = useModel('@@initialState');
@@ -803,6 +804,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
             region={cluster?.scope.region}
             disabled={!RBAC.Permissions.getContainerLog.allowed}
             clusterName={cluster?.name}
+            appName={appName}
             env={env2MlogEnv.get(cluster?.scope.environment || 'dev')}
             podName={record.podName}
           />
