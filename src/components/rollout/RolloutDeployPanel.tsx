@@ -374,7 +374,10 @@ function RolloutDeployPanel(props: RolloutDeployPanelProps) {
                 () => {
                   enforcePromote(id).then(() => {
                     successAlert(
-                      intl.formatMessage({ id: 'pages.message.cluster.enforcePromote.success' }),
+                      intl.formatMessage(
+                        { id: 'pages.message.pods.step.deploy' },
+                        { index: step.index + 1 },
+                      ),
                     );
                     refresh();
                   });
