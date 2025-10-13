@@ -2,9 +2,9 @@ import {
   Affix, Button, Col, Form, Modal, Row,
 } from 'antd';
 import {
-  useCallback, useMemo, useRef, useState,
+  useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
-import { useRequest } from 'umi';
+import { useRequest, history } from 'umi';
 import { useIntl } from '@@/plugin-locale/localeExports';
 import { useModel } from '@@/plugin-model/useModel';
 import type { FieldData } from 'rc-field-form/lib/interface';
@@ -45,14 +45,18 @@ export default (props: any) => {
 
   const { location } = props;
   const { query, pathname } = location;
-  const { environment: envFromQuery, sourceClusterID } = query;
+  const { environment: envFromQuery, sourceClusterID, step } = query;
   const editing = pathname.endsWith('edit');
   const creating = pathname.endsWith('newinstance/git');
   const copying = !!sourceClusterID;
 
   const { successAlert } = useModel('alert');
   const [form] = Form.useForm();
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(() => {
+    // 从URL query参数中读取step值作为默认值
+    const stepFromQuery = parseInt(step, 10);
+    return !isNaN(stepFromQuery) && stepFromQuery >= 0 ? stepFromQuery : 0;
+  });
   const [template, setTemplate] = useState<{ name: string, release: string }>({ release: '', name: '' });
   const [basic, setBasic] = useState<FieldData[]>([{
     name: environment, value: envFromQuery,
@@ -66,6 +70,18 @@ export default (props: any) => {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [enableRebuilddeployModal, setEnableRebuilddeployModal] = useState(false);
   const pageOrders = useMemo(() => (editing ? [1, 2, 3] : [0, 1, 2, 3]), [editing]);
+
+  // 当current值变化时，同步更新URL参数
+  useEffect(() => {
+    const currentQuery = new URLSearchParams(window.location.search);
+    const currentStep = currentQuery.get('step');
+
+    if (current.toString() !== currentStep) {
+      currentQuery.set('step', current.toString());
+      const newUrl = `${window.location.pathname}?${currentQuery.toString()}`;
+      history.replace(newUrl);
+    }
+  }, [current]);
 
   const { run: refreshAppEnvTemplate } = useRequest((env) => getApplicationEnvTemplate(id, env), {
     onSuccess: (data) => {
@@ -159,7 +175,7 @@ export default (props: any) => {
         const { environment: e, region: r } = scope;
         const { release: rel } = t;
         const { gitRefType, gitRef } = parseGitRef(git);
-        setBasic([
+        const curBasic = [
           { name, value: n },
           { name: description, value: d },
           { name: 'tags', value: tags },
@@ -172,14 +188,16 @@ export default (props: any) => {
           { name: branch, value: b },
           { name: subfolder, value: s },
           { name: release, value: rel },
-        ]);
+        ];
+        setBasic(curBasic);
         setOriginConfig({
           git,
           templateInput,
         });
         setConfig(templateInput);
-        setTemplate(t);
         setCluster(clusterData);
+        form.setFields(curBasic);
+        setTemplate(t);
       },
     });
   }
@@ -411,7 +429,7 @@ export default (props: any) => {
               )
             }
             {
-              pageOrders[current] === 2 && (
+              pageOrders[current] === 2 && template.name && form.getFieldValue(release) && (
                 <Config
                   template={template}
                   release={form.getFieldValue(release)}
@@ -423,8 +441,7 @@ export default (props: any) => {
               )
             }
             {
-              pageOrders[current] === 3
-              && (
+              pageOrders[current] === 3 && template.name && form.getFieldValue(release) && (
                 <Audit
                   template={template}
                   editing={editing}
