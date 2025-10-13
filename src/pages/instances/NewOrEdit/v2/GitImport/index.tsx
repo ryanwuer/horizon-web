@@ -1,7 +1,7 @@
 import {
   Affix, Button, Col, Form, Modal, Row,
 } from 'antd';
-import { useRequest } from 'umi';
+import { useRequest, history } from 'umi';
 import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
@@ -42,7 +42,7 @@ export default (props: any) => {
 
   const { location } = props;
   const { query, pathname } = location;
-  const { environment: envFromQuery, sourceClusterID } = query;
+  const { environment: envFromQuery, sourceClusterID, step } = query;
   const editing = pathname.endsWith('editv2/git');
   const creating = pathname.endsWith('newinstancev2/git');
   const copying = !!sourceClusterID;
@@ -52,7 +52,11 @@ export default (props: any) => {
   const buildFormRef = useRef();
   const templateFormRef = useRef();
   const [applicationName, setApplicationName] = useState('');
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(() => {
+    // 从URL query参数中读取step值作为默认值
+    const stepFromQuery = parseInt(step, 10);
+    return !isNaN(stepFromQuery) && stepFromQuery >= 0 ? stepFromQuery : 0;
+  });
   const [cluster, setCluster] = useState<CLUSTER.ClusterV2>();
   const [originConfig, setOriginConfig] = useState({});
   const [buildConfig, setBuildConfig] = useState({});
@@ -70,6 +74,18 @@ export default (props: any) => {
   const [useHistoryConfig, setUseHistoryConfig] = useState<boolean>(false);
 
   const pageOrders = useMemo(() => (editing ? [0, 1, 3, 4] : [0, 1, 2, 3, 4]), [editing]);
+
+  // 当current值变化时，同步更新URL参数
+  useEffect(() => {
+    const currentQuery = new URLSearchParams(window.location.search);
+    const currentStep = currentQuery.get('step');
+
+    if (current.toString() !== currentStep) {
+      currentQuery.set('step', current.toString());
+      const newUrl = `${window.location.pathname}?${currentQuery.toString()}`;
+      history.replace(newUrl);
+    }
+  }, [current]);
 
   const fillDefaultConfig = (data: API.GetApplicationResponseV2) => {
     setBuildConfig(data!.buildConfig);
@@ -274,6 +290,7 @@ export default (props: any) => {
       setReleaseName(ti.release);
       setTemplateConfig(tc);
       setCluster(data);
+      setBaseInfoValid(true);
     },
   });
 
