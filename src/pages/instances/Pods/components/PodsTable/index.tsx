@@ -449,13 +449,16 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     state.reason = state.reason.slice(0, 1).toUpperCase() + state.reason.slice(1);
 
     const res: CLUSTER.PodInTable = item;
-    Object.keys(res.annotations).forEach((k) => {
-      // This is a workaround for the issue that the annotation value(liveness/readiness probe script) is too long
-      // TODO: remove this workaround after the issue is fixed
-      if (k.endsWith('.sh')) {
-        delete res.annotations[k];
-      }
-    });
+    if (res.annotations) {
+      Object.keys(res.annotations).forEach((k) => {
+        // This is a workaround for the issue that the annotation value(liveness/readiness probe script) is too long
+        // TODO: remove this workaround after the issue is fixed
+        if (k.endsWith('.sh')) {
+          delete res.annotations[k];
+        }
+      });
+    }
+
     return res;
   }).sort((a: CLUSTER.PodInTable, b: CLUSTER.PodInTable) => {
     // sort by annotation's key, keys with the upper case letter go to the front
