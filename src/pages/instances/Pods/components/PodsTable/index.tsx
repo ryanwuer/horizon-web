@@ -462,8 +462,8 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     return res;
   }).sort((a: CLUSTER.PodInTable, b: CLUSTER.PodInTable) => {
     // sort by annotation's key, keys with the upper case letter go to the front
-    const keysA = Object.keys(a.annotations);
-    const keysB = Object.keys(b.annotations);
+    const keysA = Object.keys(a.annotations || {});
+    const keysB = Object.keys(b.annotations || {});
     for (let i = 0; i < Math.min(keysA.length, keysB.length); i += 1) {
       if (keysA[i] !== keysB[i]) {
         return keysB[i].localeCompare(keysA[i]);
@@ -471,8 +471,8 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     }
 
     // sort by annotation's value, same value with the same key is next to each other
-    const valuesA = Object.values(a.annotations);
-    const valuesB = Object.values(b.annotations);
+    const valuesA = Object.values(a.annotations || {});
+    const valuesB = Object.values(b.annotations || {});
     for (let i = 0; i < Math.min(valuesA.length, valuesB.length); i += 1) {
       if (valuesA[i] !== valuesB[i]) {
         return valuesA[i].localeCompare(valuesB[i]);
@@ -506,8 +506,8 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
   // final items in array have format key:value
   // sort by key:value string
   const annotationsList = useMemo(() => Array.from(new Set(filteredData.map((item) => {
-    const keys = Object.keys(item.annotations);
-    const values = Object.values(item.annotations);
+    const keys = Object.keys(item.annotations || {});
+    const values = Object.values(item.annotations || {});
     const result: string[] = [];
     for (let i = 0; i < keys.length; i += 1) {
       result.push(`${keys[i]}:${values[i]}`);
@@ -756,7 +756,7 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
       key: 'annotations',
       filters: annotationsList,
       onFilter: (value: string, record: CLUSTER.PodInTable) => {
-        const keys = Object.keys(record.annotations);
+        const keys = Object.keys(record.annotations || {});
         for (let i = 0; i < keys.length; i += 1) {
           if (`${keys[i]}:${record.annotations[keys[i]]}` === value) {
             return true;
@@ -766,10 +766,10 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
       },
       render: (text: any, record: CLUSTER.PodInTable) => (
         // return <collapseList defaultCount={2} data={record.annotations}/>
-        Object.keys(record.annotations).length > 0
+        Object.keys(record.annotations || {}).length > 0
           ? (
             <div style={{ minWidth: '260px', maxWidth: '390px', wordBreak: 'break-all' }}>
-              <CollapseList defaultCount={2} data={record.annotations} />
+              <CollapseList defaultCount={2} data={record.annotations || {}} />
             </div>
           ) : <div />
       ),
