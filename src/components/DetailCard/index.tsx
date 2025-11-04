@@ -71,27 +71,42 @@ export default (props: Props) => {
                   </div>
                 )));
               } else if (valueType === ValueType.Object) {
-                // @ts-ignore
-                const keys = Object.keys(param.value);
-                for (let key = 0; key < keys.length; key += 1) {
-                  const i = keys[key];
-                  itemContents.push((
-                    <div key={col2++} className={styles.textValue}>
-                      <span
-                        className={styles.textValueKey}
-                      >
-                        {i}
-                      </span>
-                      :
-                      {' '}
-                      <span
-                      // @ts-ignore
-                        className={styles.textValueValue}
-                      >
-                        {param.value[i]}
-                      </span>
-                    </div>
-                  ));
+                const objValue = param.value as Record<string, any>;
+                if (objValue) {
+                  const keys = Object.keys(objValue);
+                  for (let key = 0; key < keys.length; key += 1) {
+                    const i = keys[key];
+                    const itemValue = objValue[i];
+                    // 处理嵌套对象和数组
+                    let displayValue: any;
+                    if (itemValue === null || itemValue === undefined) {
+                      displayValue = String(itemValue);
+                    } else if (Array.isArray(itemValue)) {
+                      // 数组类型，直接格式化为 JSON 数组字符串，保持数组结构
+                      displayValue = JSON.stringify(itemValue, null, 2);
+                    } else if (typeof itemValue === 'object') {
+                      displayValue = JSON.stringify(itemValue, null, 2);
+                    } else {
+                      displayValue = itemValue;
+                    }
+                    itemContents.push((
+                      <div key={col2++} className={styles.textValue}>
+                        <span
+                          className={styles.textValueKey}
+                        >
+                          {i}
+                        </span>
+                        :
+                        {' '}
+                        <span
+                        // @ts-ignore
+                          className={styles.textValueValue}
+                        >
+                          {displayValue}
+                        </span>
+                      </div>
+                    ));
+                  }
                 }
               }
             }
