@@ -158,6 +158,14 @@ export default (props: any) => {
                     onClick={() => history.push(`${newV2}/image`)}
                   />
                 </Col>
+                <Col key="vmdeploy" span={12}>
+                  <ItemCard
+                    avatar={<Avatar src="/vm.svg" />}
+                    title={<span>{intl.formatMessage({ id: 'pages.navigation.vmDeploy' })}</span>}
+                    description={intl.formatMessage({ id: 'pages.navigation.vmDeploy.desc' })}
+                    onClick={() => history.push(`${newV2}/vm`)}
+                  />
+                </Col>
                 <Col key="chartdeploy" span={12}>
                   <ItemCard
                     avatar={<Avatar src="/helm.svg" />}

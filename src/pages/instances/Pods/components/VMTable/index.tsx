@@ -1,0 +1,1072 @@
+import {
+  Button, Input, Menu, Modal, Space, Table, Tooltip,
+} from 'antd';
+import { useIntl } from '@@/plugin-locale/localeExports';
+import React, {
+  useCallback, useMemo, useState,
+} from 'react';
+import { useModel } from '@@/plugin-model/useModel';
+import './index.less';
+import { useRequest } from '@@/plugin-request/request';
+import Dropdown from 'antd/es/dropdown';
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  CopyOutlined,
+  DownOutlined,
+  EyeOutlined,
+  LoadingOutlined,
+  MinusSquareTwoTone,
+  PauseCircleOutlined,
+  PlusSquareTwoTone,
+  QuestionCircleOutlined,
+} from '@ant-design/icons';
+import copy from 'copy-to-clipboard';
+import FullscreenModal from '@/components/FullscreenModal';
+import {
+  deletePods,
+  queryPodContainers,
+  queryPodEvents,
+  queryPodStdout,
+} from '@/services/clusters/pods';
+import CodeEditor from '@/components/CodeEditor';
+import NoData from '@/components/NoData';
+import {
+  Offline, Online, PodError, PodPending, PodRunning, Unknown,
+} from '@/components/State';
+import RBAC from '@/rbac';
+import withTrim from '@/components/WithTrim';
+import CollapseList from '@/components/CollapseList';
+import styles from './index.less';
+import Utils, { handleHref } from '@/utils';
+import { env2MlogEnv } from '@/const';
+import { MicroApp } from '@/components/Widget';
+
+const Search = withTrim(Input.Search);
+const pollingInterval = 5000;
+
+const status2StateNode = new Map(
+  [
+    ['unknown', <Unknown />],
+    ['online', <Online />],
+    ['offline', <Offline />],
+  ],
+);
+
+const LifeCycleItemAbnormal = 'Abnormal';
+const LifeCycleItemSuccess = 'Success';
+const LifeCycleItemWaiting = 'Waiting';
+const LifeCycleItemRunning = 'Running';
+const noWrap = () => ({ style: { whiteSpace: 'nowrap' } });
+
+// 使用与PodsTable相同的类型定义，因为VM在Kubernetes中也是以Pod的形式运行
+export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable[], cluster?: CLUSTER.Cluster | CLUSTER.ClusterV2, noMicroApp?: boolean }) => {
+  const {
+    data, allData, cluster, noMicroApp = false,
+  } = props;
+  const appName = (cluster as CLUSTER.ClusterV2)?.applicationName || (cluster as CLUSTER.Cluster)?.application?.name;
+  const intl = useIntl();
+  const [filter, setFilter] = useState('');
+  const { initialState } = useModel('@@initialState');
+  const { fullPath } = initialState!.resource;
+  const [fullscreen, setFullscreen] = useState(false);
+  const [vm, setVm] = useState<CLUSTER.PodInTable>();
+  const [selectedVms, setSelectedVms] = useState<CLUSTER.PodInTable[]>([]);
+  const { successAlert, errorAlert } = useModel('alert');
+  const [showEvents, setShowEvents] = useState(false);
+  const [showLifeCycle, setShowLifeCycle] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [vmLog, setVmLog] = useState('');
+  const [autoRefreshVmLog, setAutoRefreshVmLog] = useState(true);
+
+  const {
+    data: vmLogInterval,
+    run: refreshVmLog,
+    cancel: cancelVmLog,
+  } = useRequest((vmName, containerName) => queryPodStdout(cluster!.id, {
+    podName: vmName,
+    containerName,
+  }), {
+    manual: true,
+    ready: !!cluster,
+    formatResult: (res) => res,
+    pollingInterval: 5000,
+    onSuccess: () => {
+      setVmLog(vmLogInterval);
+    },
+  });
+
+  const {
+    data: vmLogOnce,
+    run: refreshVmLogOnce,
+  } = useRequest((vmName, containerName) => queryPodStdout(cluster!.id, {
+    podName: vmName,
+    containerName,
+  }), {
+    manual: true,
+    ready: !!cluster,
+    formatResult: (res) => res,
+    onSuccess: () => {
+      setVmLog(vmLogOnce);
+    },
+  });
+
+  const {
+    run: refreshEvents,
+    cancel: stopRefreshEvents,
+  } = useRequest((vmName) => queryPodEvents(cluster!.id, vmName), {
+    pollingInterval,
+    manual: true,
+    formatResult: (res: any) => res,
+    onSuccess: (eventsResp: any) => {
+      setEvents(eventsResp.data.map((v: any, idx: number) => ({
+        key: idx,
+        type: v.type,
+        reason: v.reason,
+        message: v.message,
+        count: v.count,
+        eventTimestamp: Utils.timeToLocal(v.eventTimestamp),
+      })));
+    },
+  });
+
+  const formatMessage = useCallback((suffix: string, defaultMsg?: string) => intl.formatMessage({ id: `pages.cluster.vmTable.${suffix}`, defaultMessage: defaultMsg }), [intl]);
+
+  const formatConsoleURL = (v: CLUSTER.PodInTable) => {
+    const { environment } = cluster?.scope || {};
+    return `/instances${fullPath}/-/webconsole?namespace=${v.namespace}&vmName=${v.podName}&containerName=${v.containerName}&environment=${environment}`;
+  };
+
+  const onClickStdout = (v: CLUSTER.PodInTable) => {
+    setFullscreen(true);
+    setVm(v);
+    refreshVmLog(v.podName, v.containerName).then();
+  };
+
+  const eventTableColumns = [
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('events.type')}</span>,
+      dataIndex: 'type',
+      key: 'type',
+      width: '70px',
+      render: (text: any) => {
+        if (text === 'Warning') {
+          return <span style={{ color: 'red' }}>{text}</span>;
+        }
+        return <span style={{ color: 'green' }}>{text}</span>;
+      },
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('events.reason')}</span>,
+      dataIndex: 'reason',
+      key: 'reason',
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('events.message')}</span>,
+      dataIndex: 'message',
+      key: 'message',
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('events.count')}</span>,
+      dataIndex: 'count',
+      key: 'count',
+      width: '70px',
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('events.time')}</span>,
+      dataIndex: 'eventTimestamp',
+      key: 'eventTimestamp',
+      width: '200px',
+    },
+  ];
+
+  const onClickEvents = (v: CLUSTER.PodInTable) => {
+    refreshEvents(v.podName).then();
+    setShowEvents(true);
+  };
+
+  const formatVmMonitorURL = (v: CLUSTER.PodInTable) => `/instances${fullPath}/-/monitoring?monitor=horizon-pod&var-pod=${v.podName}`;
+
+  const formatContainerMonitorURL = (vmName: string, container: string) => `/instances${fullPath}/-/monitoring?monitor=horizon-container&var-pod=${vmName}&var-container=${container}`;
+
+  const onCopyClick = (text: string) => {
+    if (copy(text)) {
+      successAlert(intl.formatMessage({ id: 'pages.message.copy.success' }));
+    } else {
+      errorAlert(intl.formatMessage({ id: 'pages.message.copy.fail' }));
+    }
+  };
+
+  const renderVmNameAndIP = (type: string, text: string) => {
+    if (filter && text && text.indexOf(filter) > -1) {
+      const index = text.indexOf(filter);
+      const beforeStr = text.substring(0, index);
+      const afterStr = text.substring(index + filter.length);
+
+      return (
+        <div
+          className={styles.podnameClass}
+        >
+          <Button
+            type="link"
+            onClick={
+              (e) => {
+                handleHref(e, `/instances${cluster!.fullPath}/-/pods/${text}`, 'history');
+              }
+            }
+          >
+            {beforeStr}
+            <span style={{ color: '#f50' }}>{filter}</span>
+            {afterStr}
+          </Button>
+          <Button
+            className={styles.copyButtonClass}
+            onClick={() => onCopyClick(text)}
+            type="text"
+          >
+            <CopyOutlined />
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={styles.podnameClass}
+      >
+        {
+          type === 'vmName' ? (
+            <Button
+              type="link"
+              className={styles.podnameButtonClass}
+              onClick={
+                (e) => {
+                  handleHref(e, `/instances${cluster!.fullPath}/-/pods/${text}`, 'history');
+                }
+              }
+            >
+              <span>{text}</span>
+            </Button>
+          ) : <span className={styles.ipClass}>{text}</span>
+        }
+        <Button
+          className={styles.copyButtonClass}
+          onClick={() => onCopyClick(text)}
+          type="text"
+        >
+          <CopyOutlined />
+        </Button>
+      </div>
+    );
+  };
+
+  const onChange = (e: any) => {
+    const { value } = e.target;
+    setFilter(value);
+  };
+
+  const vmNames = useMemo(() => selectedVms.map((item) => item.podName), [selectedVms]);
+  const vmOperationDisabled = useMemo(() => !selectedVms.length || !RBAC.Permissions.onlineCluster.allowed, [selectedVms]);
+
+  const hookAfterBatchOps = (ops: string, res: any) => {
+    const succeedList: string[] = [];
+    const failedList: {
+      name: string,
+      err: string,
+    }[] = [];
+    Object.keys(res).forEach((item) => {
+      const obj: CLUSTER.PodOnlineOfflineResult = res[item];
+      if (obj.result) {
+        succeedList.push(item);
+      } else {
+        const errMsg = obj.error?.ErrStatus?.message || obj.stderr || obj.stdout || obj.errorMsg;
+        failedList.push({
+          name: item,
+          err: errMsg,
+        });
+      }
+    });
+    if (failedList.length > 0) {
+      errorAlert(
+        <span>
+          {ops}
+          {formatMessage('operation.result')}
+          <br />
+          {formatMessage('operation.successList')}
+          :  [
+          {' '}
+          {succeedList.join(',')}
+          {' '}
+          ]
+          <br />
+          {formatMessage('operation.failList')}
+          :
+          <br />
+          {failedList.map((item) => (
+            <div>
+              VM:
+              {item.name}
+              {' '}
+              Error:
+              {item.err}
+              <br />
+            </div>
+          ))}
+        </span>,
+      );
+    } else {
+      successAlert(
+        <span>
+          {ops}
+          {formatMessage('operation.result')}
+          <br />
+          {formatMessage('operation.successList')}
+          :  [
+          {' '}
+          {succeedList.join(',')}
+          {' '}
+          ]
+        </span>,
+      );
+    }
+  };
+
+  const renderTile = () => (
+    <div>
+      {/* @ts-ignore */}
+      <Search placeholder="Search" onChange={onChange} style={{ width: '300px' }} value={filter} />
+      <div style={{ float: 'right' }}>
+        {
+          !noMicroApp && (
+            <>
+              <MicroApp
+                name="podoperation"
+                type="online"
+                errorAlert={errorAlert}
+                successAlert={successAlert}
+                formatMessage={formatMessage}
+                clusterID={cluster!.id}
+                podNames={vmNames}
+                disabled={vmOperationDisabled}
+                allData={allData}
+              />
+              <MicroApp
+                name="podoperation"
+                type="offline"
+                errorAlert={errorAlert}
+                successAlert={successAlert}
+                formatMessage={formatMessage}
+                clusterID={cluster!.id}
+                podNames={vmNames}
+                disabled={vmOperationDisabled}
+                allData={allData}
+              />
+            </>
+          )
+        }
+        <Button
+          style={{ marginLeft: '10px' }}
+          onClick={() => {
+            Modal.confirm({
+              title: intl.formatMessage({ id: 'pages.message.vms.delete.content' }, { number: selectedVms.length }),
+              onOk() {
+                // group by zone annotation: cloudnative.music.netease.com/Zone: gy1/gy2/...
+                // if num of selected vms is over 30% of vms in data, give a confirm dialog
+                const selectedZoneVmMap = new Map<string, number>();
+                selectedVms.forEach((item) => {
+                  const zone = item.annotations['cloudnative.music.netease.com/Zone'];
+                  if (zone) {
+                    selectedZoneVmMap.set(zone, (selectedZoneVmMap.get(zone) || 0) + 1);
+                  }
+                });
+                const zoneVmMap = new Map<string, number>();
+                allData.forEach((item) => {
+                  const zone = item.annotations['cloudnative.music.netease.com/Zone'];
+                  if (zone) {
+                    zoneVmMap.set(zone, (zoneVmMap.get(zone) || 0) + 1);
+                  }
+                });
+                // get the zone that has 30% of vms are being deleted
+                let zoneKey = '';
+                const hasZoneExceedingThreshold = Array.from(selectedZoneVmMap.keys()).some((zone) => {
+                  const selectedZoneVmNum = selectedZoneVmMap.get(zone);
+                  const zoneVmNum = zoneVmMap.get(zone);
+                  if (selectedZoneVmNum! > zoneVmNum! * 0.3) {
+                    zoneKey = zone;
+                    return true;
+                  }
+                  return false;
+                });
+
+                if (hasZoneExceedingThreshold) {
+                  Modal.confirm({
+                    title: `${zoneKey} 机房实例下线/销毁比例超过 30%，可能导致机房间流量负载不均匀，请确认！`,
+                    onOk() {
+                      deletePods(cluster!.id, selectedVms.map((item) => item.podName)).then(({ data: d }) => {
+                        hookAfterBatchOps(formatMessage('delete'), d);
+                      });
+                    },
+                  });
+                } else {
+                  deletePods(cluster!.id, selectedVms.map((item) => item.podName)).then(({ data: d }) => {
+                    hookAfterBatchOps(formatMessage('delete'), d);
+                  });
+                }
+              },
+            });
+          }}
+          disabled={!selectedVms.length || !RBAC.Permissions.deletePods.allowed}
+        >
+          <Tooltip
+            title={intl.formatMessage({ id: 'pages.message.vms.delete.hint' })}
+          >
+            {formatMessage('delete', '销毁重建')}
+          </Tooltip>
+        </Button>
+      </div>
+    </div>
+  );
+
+  const postStartHookError = 'PostStartHookError';
+  const filteredData = data.filter((item: CLUSTER.PodInTable) => !filter
+    || item.podName.indexOf(filter) > -1 || (item.ip && item.ip.indexOf(filter) > -1)).map((item) => {
+    const { state } = item;
+    if (!state.reason) {
+      state.reason = state.state;
+    }
+
+    if (item.deletionTimestamp) {
+      state.state = 'terminated';
+      state.reason = 'terminated';
+    }
+
+    if (state.reason.length > postStartHookError.length) {
+      state.reason = state.reason.substr(0, postStartHookError.length);
+    }
+
+    // change first letter to uppercase
+    state.reason = state.reason.slice(0, 1).toUpperCase() + state.reason.slice(1);
+
+    const res: CLUSTER.PodInTable = item;
+    if (res.annotations) {
+      Object.keys(res.annotations).forEach((k) => {
+        // This is a workaround for the issue that the annotation value(liveness/readiness probe script) is too long
+        // TODO: remove this workaround after the issue is fixed
+        if (k.endsWith('.sh')) {
+          delete res.annotations[k];
+        }
+      });
+    }
+
+    return res;
+  }).sort((a: CLUSTER.PodInTable, b: CLUSTER.PodInTable) => {
+    // sort by annotation's key, keys with the upper case letter go to the front
+    const keysA = Object.keys(a.annotations || {});
+    const keysB = Object.keys(b.annotations || {});
+    for (let i = 0; i < Math.min(keysA.length, keysB.length); i += 1) {
+      if (keysA[i] !== keysB[i]) {
+        return keysB[i].localeCompare(keysA[i]);
+      }
+    }
+
+    // sort by annotation's value, same value with the same key is next to each other
+    const valuesA = Object.values(a.annotations || {});
+    const valuesB = Object.values(b.annotations || {});
+    for (let i = 0; i < Math.min(valuesA.length, valuesB.length); i += 1) {
+      if (valuesA[i] !== valuesB[i]) {
+        return valuesA[i].localeCompare(valuesB[i]);
+      }
+    }
+
+    if (a.onlineStatus !== b.onlineStatus) {
+      return a.onlineStatus === 'offline' ? -1 : 1;
+    }
+    if (a.createTime < b.createTime) {
+      return 1;
+    }
+    if (a.createTime > b.createTime) {
+      return -1;
+    }
+
+    return 0;
+  });
+
+  const statusList = Array.from(new Set(filteredData.map((item) => item.state.reason))).map((item) => ({
+    text: item,
+    value: item,
+  }));
+
+  const onlineStatusList = Array.from(new Set(filteredData.map((item) => item.onlineStatus))).map((item) => ({
+    text: item.slice(0, 1).toUpperCase() + item.slice(1),
+    value: item,
+  }));
+
+  // annotations field is a list of key-value pairs(type: Record<string, string>)
+  // final items in array have format key:value
+  // sort by key:value string
+  const annotationsList = useMemo(() => Array.from(new Set(filteredData.map((item) => {
+    const keys = Object.keys(item.annotations || {});
+    const values = Object.values(item.annotations || {});
+    const result: string[] = [];
+    for (let i = 0; i < keys.length; i += 1) {
+      result.push(`${keys[i]}:${values[i]}`);
+    }
+    return result;
+  }).flat())).sort().map((item) => ({
+    text: item,
+    value: item,
+  })), [filteredData]);
+
+  const lifeCycleColumns = [
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.type')}</span>,
+      dataIndex: 'type',
+      key: 'type',
+      onHeaderCell: noWrap,
+      onCell: noWrap,
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.task')}</span>,
+      dataIndex: 'task',
+      key: 'task',
+      onHeaderCell: noWrap,
+      onCell: noWrap,
+    },
+    {
+      title: <span className={styles.tableColumnTitle}>{formatMessage('statusDetail.message')}</span>,
+      dataIndex: 'message',
+      key: 'message',
+    },
+  ];
+
+  const vmLifeCycleTypeMap: Record<string, string> = {
+    PodSchedule: formatMessage('lifeCycle.podSchedule'),
+    PodInitialize: formatMessage('lifeCycle.podInitialize'),
+    ContainerStartup: formatMessage('lifeCycle.containerStartup'),
+    ContainerOnline: formatMessage('lifeCycle.containerOnline'),
+    HealthCheck: formatMessage('lifeCycle.healthCheck'),
+    PreStop: formatMessage('lifeCycle.preStop'),
+  };
+
+  const vmLifeCycleStatusMap: Record<string, { style: any, icon: JSX.Element }> = {
+    [LifeCycleItemSuccess]: {
+      style: styles.lifecycleStatusSuccess,
+      icon: <CheckCircleOutlined />,
+    },
+    [LifeCycleItemWaiting]: {
+      style: styles.lifecycleStatusWaiting,
+      icon: <PauseCircleOutlined />,
+    },
+    [LifeCycleItemRunning]: {
+      style: styles.lifecycleStatusRunning,
+      icon: <LoadingOutlined />,
+    },
+    [LifeCycleItemAbnormal]: {
+      style: styles.lifecycleStatusFailed,
+      icon: <CloseCircleOutlined />,
+    },
+  };
+
+  const [vmLifeCycle, setVmLifeCycle] = useState<any[]>([]);
+  const onClickLifeCycle = (vmInfo: CLUSTER.PodInTable) => {
+    const lifeCycleList: any = [];
+    vmInfo.lifeCycle.forEach((value: any) => {
+      const lifeCycle = value;
+      if (lifeCycle.message === '') {
+        switch (lifeCycle.status) {
+          case LifeCycleItemSuccess:
+            lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.success' });
+            break;
+          case LifeCycleItemAbnormal:
+            switch (lifeCycle.type) {
+              case 'ContainerStartup':
+                lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.containerStartup' });
+                break;
+              case 'ContainerOnline':
+                lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.containerOnline' });
+                break;
+              case 'HealthCheck':
+                lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.healthCheck' });
+                break;
+              default:
+                lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.default' });
+            }
+            break;
+          case LifeCycleItemRunning:
+            switch (lifeCycle.type) {
+              case 'PreStop':
+                lifeCycle.message = intl.formatMessage({ id: 'pages.message.vms.lifeCycle.preStop' });
+                break;
+              default:
+                break;
+            }
+            break;
+          default:
+            break;
+        }
+      }
+      lifeCycleList.push({
+        type: (
+          <div className={(vmLifeCycleStatusMap as any)[lifeCycle.status].style}>
+            {lifeCycle.type}
+          </div>
+        ),
+        task: (
+          <div
+            className={(vmLifeCycleStatusMap as any)[lifeCycle.status].style}
+            key={lifeCycle.type}
+          >
+            {(vmLifeCycleStatusMap as any)[lifeCycle.status].icon}
+            {' '}
+            {(vmLifeCycleTypeMap as any)[lifeCycle.type]}
+          </div>
+        ),
+        message: (
+          <span className={(vmLifeCycleStatusMap as any)[lifeCycle.status].style}>
+            {' '}
+            {lifeCycle.message}
+          </span>
+        ),
+      });
+    });
+    setVmLifeCycle(lifeCycleList);
+    setShowLifeCycle(true);
+  };
+
+  const otherOperations = (record: CLUSTER.PodInTable) => (
+    <Menu>
+      <Menu.Item
+        disabled={!RBAC.Permissions.getContainerLog.allowed}
+        onClick={() => onClickStdout(record)}
+      >
+        <div style={{ color: '#1890ff' }}>{formatMessage('more.stdout')}</div>
+      </Menu.Item>
+      <Menu.Item
+        disabled={!RBAC.Permissions.getEvents.allowed}
+        onClick={() => onClickEvents(record)}
+      >
+        <div style={{ color: '#1890ff' }}>{formatMessage('more.events')}</div>
+      </Menu.Item>
+    </Menu>
+  );
+
+  // @ts-ignore
+  const columns = [
+    {
+      title: formatMessage('hostname'),
+      dataIndex: 'podName',
+      key: 'vmName',
+      render: (text: any) => renderVmNameAndIP('vmName', text),
+    },
+    {
+      title: formatMessage('vmStatus'),
+      dataIndex: ['state', 'reason'],
+      key: 'status',
+      filters: statusList,
+      onFilter: (value: string, record: CLUSTER.PodInTable) => record.state.reason === value,
+      onHeaderCell: noWrap,
+      onCell: noWrap,
+      render: (text: string, record: CLUSTER.PodInTable) => {
+        const { message } = record.state;
+        let status: JSX.Element;
+        switch (text) {
+          case 'VmInitializing':
+            status = <PodPending text="VmInitializing" message={message} />;
+            break;
+          case 'PostStartHookError':
+            status = <PodError text="PostStartHookError" message={message} />;
+            break;
+          case 'CrashLoopBackOff':
+            status = <PodError text="CrashLoopBackOff" message={message} />;
+            break;
+          case 'Running':
+            status = <PodRunning text="Running" />;
+            break;
+          case 'Terminated':
+            status = <PodPending text="Terminated" message={message} />;
+            break;
+          default:
+            status = <PodPending text={text} message={message} />;
+        }
+        let lifeCycleButtonStyle = styles.lifecycleButtonBlue;
+        record.lifeCycle.forEach((lifeCycleItem: any) => {
+          if (lifeCycleItem.status === LifeCycleItemAbnormal) {
+            lifeCycleButtonStyle = styles.lifecycleButtonRed;
+          }
+        });
+        return (
+          <div>
+            {status}
+            <Button type="link" className={lifeCycleButtonStyle}>
+              <Tooltip
+                title={intl.formatMessage({ id: 'pages.message.vms.lifeCycle.hint' })}
+              >
+                <EyeOutlined
+                  onClick={() => {
+                    onClickLifeCycle(record);
+                  }}
+                  className={styles.lifecycleButtonIcon}
+                />
+              </Tooltip>
+            </Button>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'IP',
+      dataIndex: 'ip',
+      key: 'ip',
+      render: (text: any) => renderVmNameAndIP('ip', text),
+    },
+    {
+      title: formatMessage('onlineStatus'),
+      dataIndex: 'onlineStatus',
+      key: 'onlineStatus',
+      filters: onlineStatusList,
+      onFilter: (value: string, record: CLUSTER.PodInTable) => record.onlineStatus === value,
+      render: (text: string) => (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          {status2StateNode.get(text)}
+          {
+          text === 'unknown' && (
+          <Tooltip title={formatMessage('ready.unknown.description')}>
+            <QuestionCircleOutlined style={{ marginLeft: '6px' }} />
+          </Tooltip>
+          )
+          }
+        </div>
+      ),
+    },
+    {
+      title: formatMessage('ready'),
+      dataIndex: 'readyCount',
+      key: 'readyCount',
+      render: (readyCount: number, podInTable: CLUSTER.PodInTable) => `${readyCount}/${podInTable.containers.length}`,
+    },
+    {
+      title: <div style={{ whiteSpace: 'nowrap' }}>{formatMessage('restartCount')}</div>,
+      dataIndex: 'restartCount',
+      key: 'restartCount',
+    },
+    {
+      title: formatMessage('annotations'),
+      dataIndex: 'annotations',
+      key: 'annotations',
+      filters: annotationsList,
+      onFilter: (value: string, record: CLUSTER.PodInTable) => {
+        const keys = Object.keys(record.annotations || {});
+        for (let i = 0; i < keys.length; i += 1) {
+          if (`${keys[i]}:${record.annotations[keys[i]]}` === value) {
+            return true;
+          }
+        }
+        return false;
+      },
+      render: (text: any, record: CLUSTER.PodInTable) => (
+        // return <collapseList defaultCount={2} data={record.annotations}/>
+        Object.keys(record.annotations || {}).length > 0
+          ? (
+            <div style={{ minWidth: '260px', maxWidth: '390px', wordBreak: 'break-all' }}>
+              <CollapseList defaultCount={2} data={record.annotations || {}} />
+            </div>
+          ) : <div />
+      ),
+    },
+    {
+      title: formatMessage('createdAt'),
+      dataIndex: 'createTime',
+      key: 'createTime',
+      render: (text: string) => {
+        const times = text.split(' ');
+        return (
+          <>
+            <div style={{ whiteSpace: 'nowrap' }}>{times[0]}</div>
+            <div style={{ whiteSpace: 'nowrap' }}>{times[1]}</div>
+          </>
+        );
+      },
+    },
+    {
+      title: intl.formatMessage({ id: 'pages.common.actions' }),
+      key: 'action',
+      render: (text: any, record: CLUSTER.PodInTable) => (
+        <Space size="small" style={{ maxWidth: '200px', whiteSpace: 'nowrap' }}>
+          <Button
+            type="link"
+            style={{ padding: 0 }}
+            disabled={!RBAC.Permissions.createTerminal.allowed}
+            href={formatConsoleURL(record)}
+            target="_blank"
+          >
+            {formatMessage('terminal')}
+          </Button>
+          <MicroApp
+            name="log"
+            region={cluster?.scope.region}
+            disabled={!RBAC.Permissions.getContainerLog.allowed}
+            clusterName={cluster?.name}
+            appName={appName}
+            env={env2MlogEnv.get(cluster?.scope.environment || 'dev')}
+            podName={record.podName}
+          />
+          {/*
+           * 使用 a 标签替代 Link，解决 TypeScript 类型错误
+           * 在实际项目中，如果 Link 有问题，可以考虑使用 a 标签并手动处理路由
+           */}
+          <a href={formatVmMonitorURL(record)}>
+            {formatMessage('monitor')}
+          </a>
+          <Dropdown trigger={['click']} overlay={otherOperations(record)}>
+            {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+            <a>
+              {intl.formatMessage({ id: 'pages.common.more' })}
+              {' '}
+              <DownOutlined />
+            </a>
+          </Dropdown>
+        </Space>
+      ),
+    },
+  ];
+
+  const onVmSelected = (selectedRowKeys: React.Key[], selectedRows: CLUSTER.PodInTable[]) => {
+    setSelectedVms(selectedRows);
+  };
+
+  const onRefreshButtonToggle = (checked: boolean) => {
+    setAutoRefreshVmLog(checked);
+    if (checked) {
+      refreshVmLog(vm?.podName, vm?.containerName).then();
+    } else {
+      cancelVmLog();
+    }
+  };
+
+  const locale = {
+    emptyText: <NoData
+      titleID="pages.common.vm"
+      descID="pages.noData.vm.desc"
+    />,
+  };
+
+  const [containersCache, setContainersCache] = useState<Record<string, any[]>>({});
+
+  return (
+    <div>
+      <Table
+        rowSelection={{
+          type: 'checkbox',
+          onChange: onVmSelected,
+        }}
+        // @ts-ignore
+        columns={columns}
+        scroll={{ x: '0px' }}
+        dataSource={filteredData}
+        locale={locale}
+        pagination={{
+          position: ['bottomCenter'],
+          showSizeChanger: true,
+          pageSizeOptions: [10, 20, 50, 100, 500],
+          showTotal: ((total) => intl.formatMessage({ id: 'pages.common.totalCount' }, { totalCount: total })),
+        }}
+        title={renderTile}
+        expandable={{
+          // eslint-disable-next-line react/no-unstable-nested-components
+          expandedRowRender: (record) => {
+            if (!containersCache[record.podName]) {
+              return <div />;
+            }
+
+            return (
+              <Table
+                columns={
+                  [
+                    {
+                      title: formatMessage('containerName'),
+                      dataIndex: 'name',
+                      width: '15%',
+                      key: 'name',
+                      render: (text: string) => <span>{text}</span>,
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.image' }),
+                      dataIndex: 'image',
+                      key: 'image',
+                      width: '50%',
+                    },
+                    {
+                      title: formatMessage('containerStatus'),
+                      dataIndex: 'status',
+                      key: 'status',
+                      width: '5%',
+                      render: (text: string, container: CLUSTER.ContainerDetail) => {
+                        if (!container.status) {
+                          return <div />;
+                        }
+                        const stateKey = Object.keys(container.status.state);
+                        if (stateKey.length === 0) {
+                          return <div />;
+                        }
+                        switch (stateKey[0]) {
+                          case 'running':
+                            return <PodRunning text="Running" />;
+                          case 'terminated':
+                            return <PodError text="Terminated" />;
+                          default:
+                            return <PodPending text="Waiting" />;
+                        }
+                      },
+                    },
+                    {
+                      title: formatMessage('ready'),
+                      dataIndex: 'ready',
+                      key: 'ready',
+                      render: (text: string, container: CLUSTER.ContainerDetail) => {
+                        if (container?.status?.ready) {
+                          return <Online text={formatMessage('container.ready')} />;
+                        }
+                        return <Offline text={formatMessage('ready.notready')} />;
+                      },
+                    },
+                    {
+                      title: <div style={{ whiteSpace: 'nowrap' }}>{formatMessage('restartCount')}</div>,
+                      dataIndex: 'restartCount',
+                      key: 'restartCount',
+                      width: '10%',
+                      render: (text: string, container: CLUSTER.ContainerDetail) => {
+                        let cnt = 0;
+                        if (container.status) {
+                          cnt = container.status.restartCount;
+                        }
+                        return <div>{cnt}</div>;
+                      },
+                    },
+                    {
+                      title: formatMessage('createdAt'),
+                      dataIndex: 'startedAt',
+                      key: 'startedAt',
+                      width: '20%',
+                      render: (text: string, container: CLUSTER.ContainerDetail) => {
+                        if (!container.status) {
+                          return <div />;
+                        }
+
+                        if (container.status.state.running) {
+                          return <div>{Utils.timeToLocal(container.status.state.running.startedAt)}</div>;
+                        } if (container.status.state.terminated) {
+                          return <div>{Utils.timeToLocal(container.status.state.terminated.startedAt)}</div>;
+                        }
+                        return <div />;
+                      },
+                    },
+                    {
+                      title: intl.formatMessage({ id: 'pages.common.actions' }),
+                      key: 'action',
+                      render: (text: any, container: CLUSTER.ContainerDetail) => (
+                        // 同样使用 a 标签替代 Link
+                        <a href={formatContainerMonitorURL(record.podName, container.name)}>{formatMessage('monitor')}</a>
+                      ),
+                    },
+                  ]
+                }
+                pagination={{
+                  hideOnSinglePage: true,
+                }}
+                dataSource={containersCache[record.podName]}
+                rowKey={(container) => container.name}
+              />
+            );
+          },
+          onExpand: (expanded, record) => {
+            if (expanded) {
+              queryPodContainers(cluster!.id, { podName: record.podName }).then((result) => {
+                const containersCacheNew = Object.create(containersCache);
+                const containers: any[] = [];
+                result.data.forEach((container: CLUSTER.ContainerDetail) => {
+                  containers.push(container);
+                });
+                containersCacheNew[record.podName] = containers;
+                setContainersCache(containersCacheNew);
+              });
+            }
+          },
+          // eslint-disable-next-line react/no-unstable-nested-components
+          expandIcon: ({ expanded, onExpand, record }) => (expanded ? (
+            <MinusSquareTwoTone className={styles.expandedIcon} onClick={(e) => onExpand(record, e)} />
+          ) : (
+            <PlusSquareTwoTone className={styles.expandedIcon} onClick={(e) => onExpand(record, e)} />
+          )),
+        }}
+      />
+      <FullscreenModal
+        title="Stdout"
+        visible={fullscreen}
+        listToSelect={vm?.containers.map((container: any) => container.name)}
+        onSelectChange={(value: string) => {
+          if (vm) {
+            const newVm = Object.create(vm);
+            newVm.containerName = value;
+            setVm(newVm);
+            if (autoRefreshVmLog) {
+              cancelVmLog();
+              refreshVmLog(vm.podName, value).then();
+            } else {
+              refreshVmLogOnce(vm.podName, value).then();
+            }
+          }
+        }}
+        onClose={() => { setFullscreen(false); cancelVmLog(); }}
+        fullscreen={false}
+        supportFullscreenToggle
+        supportRefresh
+        onRefreshButtonToggle={onRefreshButtonToggle}
+        defaultSelect={vm?.containerName}
+      >
+        <CodeEditor
+          content={vmLog}
+        />
+      </FullscreenModal>
+      <Modal
+        title={formatMessage('events')}
+        visible={showEvents}
+        closable
+        footer={[]}
+        width="1200px"
+        bodyStyle={{ overflow: 'auto' }}
+        onCancel={() => {
+          stopRefreshEvents();
+          setShowEvents(false);
+        }}
+      >
+        <Table
+          pagination={
+            {
+              pageSize: 8,
+            }
+          }
+          columns={eventTableColumns}
+          dataSource={events}
+        />
+      </Modal>
+      <Modal
+        visible={showLifeCycle}
+        title={formatMessage('statusDetail')}
+        footer={[]}
+        onCancel={() => {
+          setShowLifeCycle(false);
+        }}
+        width="800px"
+        centered
+      >
+        <div>
+          <Table
+            // @ts-ignore
+            columns={lifeCycleColumns}
+            dataSource={vmLifeCycle}
+          />
+        </div>
+      </Modal>
+    </div>
+  );
+};

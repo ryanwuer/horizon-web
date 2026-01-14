@@ -1,4 +1,4 @@
-﻿export const routes = [
+export const routes = [
   {
     path: '/user/login',
     layout: false,
@@ -192,6 +192,11 @@ const applicationRoutes = [
     path: '/applications/*/-/newinstancev2/image',
     menuRender: false,
     component: 'instances/NewOrEdit/v2/ImageDeploy',
+  },
+  {
+    path: '/applications/*/-/newinstancev2/vm',
+    menuRender: false,
+    component: 'instances/NewOrEdit/v2/VMDeploy',
   },
   {
     path: '/applications/*/-/newinstancev2/chart',
