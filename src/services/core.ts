@@ -19,5 +19,6 @@ export enum CatalogType {
     Workload = 'workload',
     Middleware = 'middleware',
     Database = 'database',
-    Other = 'other'
+    Other = 'other',
+    VirtualMachine = 'virtual_machine'
 }

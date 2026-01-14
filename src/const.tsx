@@ -162,4 +162,5 @@ export enum AppOrClusterType {
   GIT = 'git',
   IMAGE = 'image',
   CHART = 'chart',
+  VM = 'vm',
 }

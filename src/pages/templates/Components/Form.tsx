@@ -24,6 +24,7 @@ export const TemplateForm = (props: { editRepository?: boolean, onRepositoryBlur
           <Option key="workload" value="workload">{intl.formatMessage({ id: 'pages.catalog.workload' })}</Option>
           <Option key="other" value="other">{intl.formatMessage({ id: 'pages.catalog.other' })}</Option>
           <Option key="v1" value="v1">{intl.formatMessage({ id: 'pages.catalog.v1' })}</Option>
+          <Option key="virtual_machine" value="virtual_machine">{intl.formatMessage({ id: 'pages.catalog.virtual_machine' })}</Option>
         </Select>
       </Form.Item>
       <Form.Item

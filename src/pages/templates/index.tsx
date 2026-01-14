@@ -216,7 +216,10 @@ function TemplateList(props: { initialState: API.InitialState }) {
           <TabPane tab={intl.formatMessage({ id: 'pages.catalog.database' })} key="4">
             <TemplateTable userID={userID} type={CatalogType.Database} />
           </TabPane>
-          <TabPane tab={intl.formatMessage({ id: 'pages.catalog.other' })} key="5">
+          <TabPane tab={intl.formatMessage({ id: 'pages.catalog.virtual_machine' })} key="5">
+            <TemplateTable userID={userID} type={CatalogType.VirtualMachine} />
+          </TabPane>
+          <TabPane tab={intl.formatMessage({ id: 'pages.catalog.other' })} key="6">
             <TemplateTable userID={userID} type={CatalogType.Other} />
           </TabPane>
         </TemplateTab>
