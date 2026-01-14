@@ -4,7 +4,6 @@ import { useRequest } from '@@/plugin-request/request';
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { Popover, Tabs } from 'antd';
 import PageWithBreadcrumb from '@/components/PageWithBreadcrumb';
 import {
   getClusterV2, getClusterStatusV2, getClusterResourceTree, getStepV2, getClusterBuildStatusV2,
@@ -14,9 +13,9 @@ import { queryEnvironments } from '@/services/environments/environments';
 import { queryRegions } from '@/services/applications/applications';
 import { PageWithInitialState } from '@/components/Enhancement';
 import { CenterSpin, MaxSpace } from '@/components/Widget';
-import { refreshPodsInfo } from '@/components/rollout';
-import PodsTable from '../components/PodsTable';
-import { StepCard, BuildCard, CountCircle } from '../components';
+import { refreshVMsInfo } from '@/components/rollout';
+import VMTable from '../components/VMTable';
+import { StepCard, BuildCard } from '../components';
 import ButtonBarV2 from '../components/ButtonBarV2';
 import NoData from '@/components/NoData';
 import InfoMenu from '../components/InfoMenu';
@@ -25,23 +24,13 @@ import { queryTemplate } from '@/services/templates/templates';
 import { CatalogType } from '@/services/core';
 import { ClusterBadgeBar } from '../components/Badge';
 
-const { TabPane } = Tabs;
-
 const pollingInterval = 6000;
 
-interface PodsPageProps {
+interface VMPageProps {
   initialState: API.InitialState,
 }
 
-const getLastPattern = (name: string) => {
-  const matches = /(?:[_\-a-zA-Z0-9]*\/)*([_\-a-zA-Z0-9]*)/.exec(name);
-  if (matches === null || matches.length < 1) {
-    return '/';
-  }
-  return matches[1];
-};
-
-function PodsPage(props: PodsPageProps) {
+function VMPage(props: VMPageProps) {
   const intl = useIntl();
   const { initialState: { resource: { id, parentID: applicationID } } } = props;
   const { successAlert } = useModel('alert');
@@ -52,6 +41,7 @@ function PodsPage(props: PodsPageProps) {
   const [progressing, setProgressing] = useState(false);
 
   const { data: cluster } = useRequest(() => getClusterV2(id), {});
+
   const infoMenuRef = useRef();
 
   useRequest(queryEnvironments, {
@@ -133,7 +123,7 @@ function PodsPage(props: PodsPageProps) {
     },
   });
 
-  const podsResourceInfo = refreshPodsInfo(resourceTree);
+  const podsInfo = refreshVMsInfo(resourceTree);
 
   const showBuildView = useMemo(() => clusterBuildStatus && clusterBuildStatus.latestPipelinerun
     && (pipelineStatus !== PipelineStatus.None), [clusterBuildStatus, pipelineStatus]);
@@ -167,7 +157,8 @@ function PodsPage(props: PodsPageProps) {
             clusterStatus={clusterStatus}
             env2DisplayName={env2DisplayName}
             region2DisplayName={region2DisplayName}
-            podsInfo={podsResourceInfo}
+            podsInfo={podsInfo}
+            isVirtualMachine
           />
           <ClusterBadgeBar clusterID={id} />
           {
@@ -189,42 +180,20 @@ function PodsPage(props: PodsPageProps) {
             )
           }
           {
-            podsResourceInfo.sortedKey.length >= 1
+            podsInfo.sortedKey.length >= 1
               && clusterStatus.status !== ClusterStatus.FREED
               && clusterStatus.status !== ClusterStatus.NOTFOUND
               ? (
-                // Pod场景下继续使用Tabs组件
-                <Tabs
-                  defaultActiveKey={podsResourceInfo.sortedKey[0]}
-                >
-                  {
-                    podsResourceInfo.sortedKey.map((key, index) => (
-                      <TabPane
-                        tab={(
-                          <Popover content={key}>
-                            {
-                              `${getLastPattern(key)}`
-                            }
-                            <CountCircle count={podsResourceInfo.podsMap[key].length} />
-                            {podsResourceInfo.sorted && index === 0 ? ' (current)' : ''}
-                          </Popover>
-                        )}
-                        key={key}
-                        tabKey={key}
-                      >
-                        <PodsTable
-                          key={key}
-                          data={podsResourceInfo.podsMap[key]}
-                          allData={Object.values(podsResourceInfo.podsMap).flat()}
-                          cluster={cluster}
-                          noMicroApp={!isWorkload}
-                        />
-                      </TabPane>
-                    ))
-                  }
-                </Tabs>
+                // VM场景下，不使用Tabs，直接展示VMTable
+                <VMTable
+                  key="vm-table"
+                  data={Object.values(podsInfo.podsMap).flat()}
+                  allData={Object.values(podsInfo.podsMap).flat()}
+                  cluster={cluster}
+                  noMicroApp={!isWorkload}
+                />
               )
-              : <NoData titleID="pages.cluster.podsTable.nodata.title" descID="pages.cluster.podsTable.nodata.desc" />
+              : <NoData titleID="pages.cluster.vmTable.nodata.title" descID="pages.cluster.vmTable.nodata.desc" />
           }
         </MaxSpace>
       </div>
@@ -232,4 +201,4 @@ function PodsPage(props: PodsPageProps) {
   );
 }
 
-export default PageWithInitialState(PodsPage);
+export default PageWithInitialState(VMPage);
