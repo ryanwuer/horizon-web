@@ -14,8 +14,9 @@ import { queryEnvironments } from '@/services/environments/environments';
 import { queryRegions } from '@/services/applications/applications';
 import { PageWithInitialState } from '@/components/Enhancement';
 import { CenterSpin, MaxSpace } from '@/components/Widget';
-import { refreshPodsInfo } from '@/components/rollout';
+import { refreshPodsInfo, refreshVMsInfo } from '@/components/rollout';
 import PodsTable from '../components/PodsTable';
+import VMTable from '../components/VMTable';
 import { StepCard, BuildCard, CountCircle } from '../components';
 import ButtonBarV2 from '../components/ButtonBarV2';
 import NoData from '@/components/NoData';
@@ -92,6 +93,8 @@ function PodsPage(props: PodsPageProps) {
 
   const isWorkload = useMemo(() => template && template.type === CatalogType.Workload, [template]);
 
+  const isVirtualMachine = useMemo(() => template && template.type === CatalogType.VirtualMachine, [template]);
+
   const { data: step, run: getStep, refresh: refreshStep } = useRequest(() => getStepV2(id), {
     manual: true,
   });
@@ -133,7 +136,12 @@ function PodsPage(props: PodsPageProps) {
     },
   });
 
-  const podsInfo = useMemo(() => refreshPodsInfo(resourceTree), [resourceTree]);
+  const podsInfo = useMemo(() => {
+    if (isVirtualMachine) {
+      return refreshVMsInfo(resourceTree);
+    }
+    return refreshPodsInfo(resourceTree);
+  }, [resourceTree, isVirtualMachine]);
 
   const showBuildView = useMemo(() => clusterBuildStatus && clusterBuildStatus.latestPipelinerun
     && (pipelineStatus !== PipelineStatus.None), [clusterBuildStatus, pipelineStatus]);
@@ -211,13 +219,23 @@ function PodsPage(props: PodsPageProps) {
                         key={key}
                         tabKey={key}
                       >
-                        <PodsTable
-                          key={key}
-                          data={podsInfo.podsMap[key]}
-                          allData={Object.values(podsInfo.podsMap).flat()}
-                          cluster={cluster}
-                          noMicroApp={!isWorkload}
-                        />
+                        {isVirtualMachine ? (
+                          <VMTable
+                            key={key}
+                            data={podsInfo.podsMap[key]}
+                            allData={Object.values(podsInfo.podsMap).flat()}
+                            cluster={cluster}
+                            noMicroApp={!isWorkload}
+                          />
+                        ) : (
+                          <PodsTable
+                            key={key}
+                            data={podsInfo.podsMap[key]}
+                            allData={Object.values(podsInfo.podsMap).flat()}
+                            cluster={cluster}
+                            noMicroApp={!isWorkload}
+                          />
+                        )}
                       </TabPane>
                     ))
                   }

@@ -386,3 +386,5 @@ const refreshPodsInfo = (data?: CLUSTER.ResourceTree) => {
 };
 
 export default refreshPodsInfo;
+
+export const refreshVMsInfo = refreshPodsInfo;
