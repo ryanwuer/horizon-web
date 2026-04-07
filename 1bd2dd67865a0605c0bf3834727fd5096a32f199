@@ -1,0 +1,29 @@
+src/pages/instances/Pods/components/PodsTable/index.tsx
+  f4fdefed8448b03d 2,29,83-87,345-360,1087-1114,1116-1132
+src/services/clusters/pods.ts
+  f4fdefed8448b03d 77-80,82-84,86-89
+CLAUDE.md
+  f4fdefed8448b03d 1-48,50-112
+config/proxy.ts
+  f4fdefed8448b03d 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "1bd2dd67865a0605c0bf3834727fd5096a32f199",
+  "prompts": {
+    "f4fdefed8448b03d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d8ddcc0b-7c64-4a47-b351-5bfa40f8475b",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ryan Wu",
+      "messages": [],
+      "total_additions": 198,
+      "total_deletions": 5,
+      "accepted_lines": 191,
+      "overriden_lines": 5
+    }
+  }
+}
