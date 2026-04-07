@@ -74,3 +74,16 @@ export async function queryPodDetail(clusterID: number, podName: string) {
     },
   });
 }
+
+export async function execCommand(clusterID: number, pods: string[], commands: string[], containerName?: string) {
+  return request<{
+    data: Record<string, CLUSTER.PodOnlineOfflineResult>
+  }>(`/apis/core/v2/clusters/${clusterID}/exec`, {
+    method: 'POST',
+    data: {
+      podList: pods,
+      commands,
+      containerName,
+    },
+  });
+}

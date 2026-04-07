@@ -1,5 +1,5 @@
 import {
-  Button, Input, Menu, Modal, Space, Table, Tooltip,
+  Button, Input, Menu, Modal, Select, Space, Table, Tooltip,
 } from 'antd';
 import { useIntl } from '@@/plugin-locale/localeExports';
 import React, {
@@ -26,6 +26,7 @@ import copy from 'copy-to-clipboard';
 import FullscreenModal from '@/components/FullscreenModal';
 import {
   deletePods,
+  execCommand,
   queryPodContainers,
   queryPodEvents,
   queryPodStdout,
@@ -79,6 +80,11 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
   const [events, setEvents] = useState([]);
   const [podLog, setPodLog] = useState('');
   const [autoRefreshPodLog, setAutoRefreshPodLog] = useState(true);
+  const [showExecModal, setShowExecModal] = useState(false);
+  const [execScript, setExecScript] = useState('');
+  const [execLoading, setExecLoading] = useState(false);
+  const [execContainerName, setExecContainerName] = useState<string>();
+  const [execContainerList, setExecContainerList] = useState<string[]>([]);
 
   const {
     data: podLogInterval,
@@ -336,7 +342,22 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
     <div>
       {/* @ts-ignore */}
       <Search placeholder="Search" onChange={onChange} style={{ width: '300px' }} value={filter} />
-      <div style={{ float: 'right' }}>
+      <div style={{ float: 'right', display: 'flex', alignItems: 'center' }}>
+        <Button
+          disabled={!selectedPods.length || !RBAC.Permissions.createTerminal.allowed}
+          onClick={() => {
+            setShowExecModal(true);
+            queryPodContainers(cluster!.id, { podName: selectedPods[0].podName }).then((res) => {
+              const names = res.data.map((c: CLUSTER.ContainerDetail) => c.name);
+              setExecContainerList(names);
+              if (names.length > 0) {
+                setExecContainerName(names[0]);
+              }
+            });
+          }}
+        >
+          {formatMessage('execute', '执行命令')}
+        </Button>
         {
           !noMicroApp && (
             <>
@@ -1062,6 +1083,52 @@ export default (props: { data: CLUSTER.PodInTable[], allData: CLUSTER.PodInTable
             dataSource={podLifeCycle}
           />
         </div>
+      </Modal>
+      <Modal
+        visible={showExecModal}
+        title={formatMessage('execute', '执行命令')}
+        width="600px"
+        confirmLoading={execLoading}
+        onCancel={() => {
+          setShowExecModal(false);
+          setExecScript('');
+          setExecContainerName(undefined);
+          setExecContainerList([]);
+        }}
+        onOk={() => {
+          if (!execScript.trim()) return;
+          setExecLoading(true);
+          execCommand(cluster!.id, selectedPods.map((item) => item.podName), ['bash', '-c', execScript], execContainerName)
+            .then(({ data: d }) => {
+              hookAfterBatchOps(formatMessage('execute', '执行命令'), d);
+              setShowExecModal(false);
+              setExecScript('');
+              setExecContainerName(undefined);
+              setExecContainerList([]);
+            })
+            .finally(() => {
+              setExecLoading(false);
+            });
+        }}
+      >
+        <div style={{ marginBottom: '12px' }}>
+          <span style={{ marginRight: '8px' }}>容器:</span>
+          <Select
+            style={{ width: '300px' }}
+            value={execContainerName}
+            onChange={(value: string) => setExecContainerName(value)}
+          >
+            {execContainerList.map((name) => (
+              <Select.Option key={name} value={name}>{name}</Select.Option>
+            ))}
+          </Select>
+        </div>
+        <Input.TextArea
+          rows={6}
+          value={execScript}
+          onChange={(e) => setExecScript(e.target.value)}
+          placeholder="#!/bin/bash"
+        />
       </Modal>
     </div>
   );
